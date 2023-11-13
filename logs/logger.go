@@ -4,8 +4,8 @@ import (
 	"runtime"
 )
 
-func FromDriver(d Driver, prefix string) Logger {
-	return Logger{driver: d, prefix: prefix}
+func FromDriver(d Driver, prefix string) *Logger {
+	return &Logger{driver: d, prefix: prefix}
 }
 
 type Logger struct {

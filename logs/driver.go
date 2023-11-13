@@ -1,15 +1,18 @@
 package logs
 
+import "time"
+
 type Driver interface {
 	Send(l *Entry)
 	GetHelper() func()
 }
 
 type Entry struct {
-	Tags     map[string]any
-	Message  string
-	Caller   caller
-	Severity Severity
+	Timestamp time.Time
+	Tags      map[string]any
+	Message   string
+	Caller    caller
+	Severity  Severity
 }
 
 type caller struct {
