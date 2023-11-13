@@ -9,14 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
-	"sisu.sh/go/code/lib/retry"
-	"sisu.sh/go/code/lib/sisulog"
+	"github.com/simplesurance/cfdns/logs"
+	"github.com/simplesurance/cfdns/logs/logtotest"
+	"github.com/simplesurance/cfdns/retry"
 )
 
 func TestRetry(t *testing.T) {
-	sisulog.ForTest(t)
 	ctx := context.Background()
 	someErr := errors.New("some error")
 
@@ -59,11 +57,12 @@ func TestRetry(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			sisulog.ForTest(t)
+			logger := logs.FromDriver(logtotest.ForTest(t, true), "")
 			fCallCount := 0
 
 			err := retry.ExpBackoff(
 				ctx,
+				logger,
 				time.Millisecond,
 				10*time.Millisecond,
 				2,
@@ -88,24 +87,42 @@ func TestRetry(t *testing.T) {
 					return nil
 				})
 			if tc.wantError {
-				assert.Equal(t, someErr, err)
+				assertEquals(t, someErr, err)
 			} else {
-				assert.NoError(t, err)
+				assertNoError(t, err)
 			}
-			assert.Equal(t, tc.wantFunctionCalls, fCallCount)
+			assertEquals(t, tc.wantFunctionCalls, fCallCount)
 		})
 	}
 }
 
 func TestContextCancel(t *testing.T) {
-	sisulog.ForTest(t)
+	logger := logs.FromDriver(logtotest.ForTest(t, true), "")
 
 	ctx, done := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer done()
 
-	err := retry.ExpBackoff(ctx, time.Hour, time.Hour, 2, 100, func() error {
+	err := retry.ExpBackoff(ctx, logger, time.Hour, time.Hour, 2, 100, func() error {
 		return errors.New("some app error")
 	})
 
-	assert.ErrorIs(t, err, context.DeadlineExceeded)
+	assertErrorIs(t, err, context.DeadlineExceeded)
+}
+
+func assertEquals(t *testing.T, v1, v2 any) {
+	if v1 != v2 {
+		t.Errorf("want: %v, have %v", v1, v2)
+	}
+}
+
+func assertNoError(t *testing.T, err error) {
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
+
+func assertErrorIs(t *testing.T, err, target error) {
+	if !errors.Is(err, target) {
+		t.Errorf("Want error %T, got %v", target, err)
+	}
 }

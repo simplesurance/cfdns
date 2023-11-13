@@ -45,8 +45,13 @@ func (l Logger) log(msg string, sev Severity, opt ...Option) {
 
 	opts := applyOptions(opt...)
 
+	msgWithPrefix := msg
+	if l.prefix != "" {
+		msgWithPrefix = l.prefix + ": " + msg
+	}
+
 	entry := &Entry{
-		Message:  l.prefix + ": " + msg,
+		Message:  msgWithPrefix,
 		Severity: sev,
 		Tags:     map[string]any{},
 	}

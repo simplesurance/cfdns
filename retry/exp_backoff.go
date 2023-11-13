@@ -33,7 +33,7 @@ import (
 // returned. If other error is returned, the delay logic will be executed.
 func ExpBackoff(
 	ctx context.Context,
-	logger logs.Driver,
+	logger logs.Logger,
 	firstDelay, maxDelay time.Duration,
 	factor float64,
 	attempts int,
@@ -49,11 +49,10 @@ func ExpBackoff(
 		}
 
 		if attempts > 0 && attempt >= attempts {
-			sisulog.Debug(ctx,
-				fmt.Sprintf("f() kept failing after %d attempts and %v; giving up.",
-					attempt,
-					time.Since(start)),
-				logkeys.Error, err)
+			logger.W("f() kept failing, exhausting retry limit; giving up.",
+				logs.WithInt("attempt", attempt),
+				logs.WithDuration("total_delay", time.Since(start)),
+				logs.WithError(err))
 
 			var permError PermanentError
 			if errors.As(err, &permError) {
@@ -65,29 +64,26 @@ func ExpBackoff(
 
 		var permError PermanentError
 		if errors.As(err, &permError) {
-			sisulog.Debug(ctx,
-				fmt.Sprintf("f() returned a permanent error after %d attempts and %v; giving up.",
-					attempt,
-					time.Since(start)),
-				logkeys.Error, permError.Cause)
+			logger.W("f() returned a permanent; giving up.",
+				logs.WithInt("attempt", attempt),
+				logs.WithDuration("total_delay", time.Since(start)),
+				logs.WithError(permError.Cause))
 
 			return permError.Cause
 		}
 
-		sisulog.Debug(ctx,
-			fmt.Sprintf("f() returned an error after %d attempts and %v",
-				attempt,
-				time.Since(start)),
-			logkeys.Error, err)
+		logger.W("f() returned an error",
+			logs.WithInt("attempt", attempt),
+			logs.WithDuration("total_delay", time.Since(start)),
+			logs.WithError(err))
 
 		select {
 		case <-ctx.Done():
 			err := ctx.Err()
-			sisulog.Debug(ctx,
-				fmt.Sprintf("context was canceled after %d attempts and %v",
-					attempt,
-					time.Since(start)),
-				logkeys.Error, err)
+			logger.D("context was canceled",
+				logs.WithInt("attempt", attempt),
+				logs.WithDuration("total_delay", time.Since(start)),
+				logs.WithError(err))
 			return err
 		case <-time.After(time.Duration(delay * float64(time.Second))):
 			delay *= factor
