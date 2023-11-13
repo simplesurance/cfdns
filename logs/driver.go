@@ -2,12 +2,19 @@ package logs
 
 type Driver interface {
 	Send(l *Entry)
+	GetHelper() func()
 }
 
 type Entry struct {
-	Tags     map[string]LogTag
+	Tags     map[string]any
 	Message  string
+	Caller   caller
 	Severity Severity
+}
+
+type caller struct {
+	File string
+	Line int
 }
 
 type Severity int
@@ -29,5 +36,3 @@ var sevToString = map[Severity]string{
 	Warn:  "warn",
 	Error: "error",
 }
-
-type LogTag func()

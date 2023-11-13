@@ -1,43 +1,66 @@
 package logs
 
-import "runtime"
+import (
+	"runtime"
+)
 
 func FromDriver(d Driver, prefix string) Logger {
-	return Logger{driver: d}
+	return Logger{driver: d, prefix: prefix}
 }
 
 type Logger struct {
-	driver  Driver
-	preffix string
+	driver Driver
+	prefix string
 }
 
 func (l Logger) SubLogger(prefix string) Logger {
 	return Logger{
-		driver:  l.driver,
-		preffix: prefix,
+		driver: l.driver,
+		prefix: prefix,
 	}
 }
 
-func (l Logger) D(msg string, opt ...Option) { l.log(msg, Debug, opt...) }
-func (l Logger) I(msg string, opt ...Option) { l.log(msg, Info, opt...) }
-func (l Logger) W(msg string, opt ...Option) { l.log(msg, Warn, opt...) }
-func (l Logger) E(msg string, opt ...Option) { l.log(msg, Error, opt...) }
+func (l Logger) D(msg string, opt ...Option) {
+	l.driver.GetHelper()()
+	l.log(msg, Debug, opt...)
+}
+
+func (l Logger) I(msg string, opt ...Option) {
+	l.driver.GetHelper()()
+	l.log(msg, Info, opt...)
+}
+
+func (l Logger) W(msg string, opt ...Option) {
+	l.driver.GetHelper()()
+	l.log(msg, Warn, opt...)
+}
+
+func (l Logger) E(msg string, opt ...Option) {
+	l.driver.GetHelper()()
+	l.log(msg, Error, opt...)
+}
 
 func (l Logger) log(msg string, sev Severity, opt ...Option) {
+	l.driver.GetHelper()()
+
 	opts := applyOptions(opt...)
 
 	entry := &Entry{
-		Message:  msg,
+		Message:  l.prefix + ": " + msg,
 		Severity: sev,
+		Tags:     map[string]any{},
 	}
 
 	// include caller
 	_, file, line, ok := runtime.Caller(opts.callersToSkip)
 	if ok {
-		opts.Tags["caller"] = Caller{
-			File: file,
-			Line: line,
-		}
+		entry.Caller.File = file
+		entry.Caller.Line = line
+	}
+
+	// include tags
+	for k, v := range opts.Tags {
+		entry.Tags[k] = v
 	}
 
 	l.driver.Send(entry)
