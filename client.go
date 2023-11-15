@@ -94,13 +94,13 @@ func runOnce[TREQ, TRESP any](
 	return handleSuccessResponse[TRESP](resp)
 }
 
-func handleErrorResponse(resp *http.Response) (err error) {
-}
-
 func handleSuccessResponse[TRESP any](resp *http.Response) (
 	tresp response[TRESP],
 	err error,
 ) {
+}
+
+func handleErrorResponse(resp *http.Response) (err error) {
 }
 
 // mergeHeaders add the values on the second parameter to the first.
