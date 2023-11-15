@@ -22,3 +22,16 @@ func TestLogger(t *testing.T) {
 	logger.W("Warn", logs.WithString("key", "value"))
 	logger.E("Error", logs.WithString("key", "value"))
 }
+
+func TestSubLogger(t *testing.T) {
+	logger := logs.FromDriver(logtotest.ForTest(t, false), "TestLogger")
+
+	logger.SubLogger("Debug",
+		logs.WithString("key", "value"),
+		logs.WithInt("pi", 3),
+		logs.WithDuration("second", time.Second),
+		logs.WithError(io.EOF),
+	).I("Sub")
+
+	logger.I("Original")
+}

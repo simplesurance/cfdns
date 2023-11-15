@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"maps"
 	"runtime"
 )
 
@@ -9,14 +10,20 @@ func FromDriver(d Driver, prefix string) *Logger {
 }
 
 type Logger struct {
-	driver Driver
-	prefix string
+	options []Option
+	driver  Driver
+	prefix  string
 }
 
-func (l Logger) SubLogger(prefix string) Logger {
+func (l Logger) SubLogger(prefix string, opts ...Option) Logger {
+	options := []Option{}
+	options = append(options, l.options...)
+	options = append(options, opts...)
+
 	return Logger{
-		driver: l.driver,
-		prefix: prefix,
+		driver:  l.driver,
+		prefix:  prefix,
+		options: options,
 	}
 }
 
@@ -43,7 +50,9 @@ func (l Logger) E(msg string, opt ...Option) {
 func (l Logger) log(msg string, sev Severity, opt ...Option) {
 	l.driver.GetHelper()()
 
-	opts := applyOptions(opt...)
+	opts2 := applyOptions(opt...)
+	opts := applyOptions(l.options...)
+	maps.Copy(opts.Tags, opts2.Tags)
 
 	msgWithPrefix := msg
 	if l.prefix != "" {
