@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-
-	"github.com/simplesurance/cfdns/logs"
 )
 
 type request[T any] struct {
-	logger      logs.Logger
 	client      *Client
 	method      string
 	path        string
@@ -21,7 +18,7 @@ type request[T any] struct {
 type response[T any] struct {
 	body    T
 	code    int
-	headers url.Values
+	headers http.Header
 }
 
 type HTTPError struct {
@@ -32,7 +29,7 @@ type HTTPError struct {
 
 func (e HTTPError) Error() string {
 	// TODO add more details
-	return fmt.Sprintf("server response is %d")
+	return fmt.Sprintf("HTTP %d\n%s", e.Code, e.RawBody)
 }
 
 var _ error = HTTPError{}

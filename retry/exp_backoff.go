@@ -33,7 +33,7 @@ import (
 // returned. If other error is returned, the delay logic will be executed.
 func ExpBackoff(
 	ctx context.Context,
-	logger logs.Logger,
+	logger *logs.Logger,
 	firstDelay, maxDelay time.Duration,
 	factor float64,
 	attempts int,
@@ -87,6 +87,7 @@ func ExpBackoff(
 			return err
 		case <-time.After(time.Duration(delay * float64(time.Second))):
 			delay *= factor
+			logger.D(fmt.Sprintf("next delay: %f seconds", delay))
 			if delay > maxDelay.Seconds() {
 				delay = maxDelay.Seconds()
 			}

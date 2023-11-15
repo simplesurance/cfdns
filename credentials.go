@@ -15,7 +15,7 @@ type apiToken struct {
 }
 
 func (a apiToken) configure(req *http.Request) {
-	panic("TODO implement")
+	req.Header.Set("authorization", "Bearer "+a.token)
 }
 
 var _ Credentials = apiToken{}
