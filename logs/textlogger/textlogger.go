@@ -11,7 +11,10 @@ import (
 )
 
 func New(out, err io.Writer) logs.Driver {
-	return &logger{}
+	return &logger{
+		outw: out,
+		errw: err,
+	}
 }
 
 type logger struct {
@@ -26,7 +29,7 @@ func (l *logger) Send(entry *logs.Entry) {
 	}
 
 	fmt.Fprintf(w, "%s [%s] %s",
-		entry.Timestamp.Format(time.RFC3339),
+		entry.Timestamp.Format(time.RFC3339Nano),
 		entry.Severity,
 		entry.Message)
 
