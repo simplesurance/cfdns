@@ -9,29 +9,29 @@ import (
 	"github.com/simplesurance/cfdns/logs"
 )
 
+const itemsPerPage = 100
+
 // Listzones lists zones on CloudFlare.
 //
 // API Reference: https://developers.cloudflare.com/api/operations/zones-get
 func (c *Client) ListZones(
 	ctx context.Context,
 	req *ListZonesRequest,
-) (*Iterator[*ListZonesResponseItem], error) {
+) *Iterator[*ListZonesResponseItem] {
 	page := 0
 
 	return &Iterator[*ListZonesResponseItem]{
 		fetchNext: func(
 			ctx context.Context,
-		) ([]*ListZonesResponseItem, error) {
+		) ([]*ListZonesResponseItem, bool, error) {
 			queryParams := url.Values{
 				"direction": {"asc"},
-				"per_page":  {"100"},
+				"per_page":  {strconv.Itoa(itemsPerPage)},
 			}
 
 			if page != 0 {
 				queryParams["name"] = []string{strconv.Itoa(page)}
 			}
-
-			headers := http.Header{}
 
 			resp, err := runWithRetry[any, *listZoneAPIResponse](
 				ctx,
@@ -41,13 +41,13 @@ func (c *Client) ListZones(
 					method:      "GET",
 					path:        "zones",
 					queryParams: queryParams,
-					headers:     headers,
+					headers:     http.Header{},
 					body:        nil,
 				})
 			page++
 
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 
 			items := make([]*ListZonesResponseItem, len(resp.body.Result))
@@ -58,9 +58,11 @@ func (c *Client) ListZones(
 				}
 			}
 
-			return items, nil
+			isLast := len(resp.body.Result) < itemsPerPage
+
+			return items, isLast, nil
 		},
-	}, nil
+	}
 }
 
 type ListZonesRequest struct{}

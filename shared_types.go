@@ -1,8 +1,15 @@
 package cfdns
 
 type cfResponseCommon struct {
-	Errors     []struct{} `json:"errors"`
-	Messages   []struct{} `json:"messages"`
+	Success bool `json:"success"`
+	Errors  []struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	} `json:"errors"`
+	Messages []struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	} `json:"messages"`
 	ResultInfo struct {
 		Count      int `json:"count"`
 		Page       int `json:"page"`

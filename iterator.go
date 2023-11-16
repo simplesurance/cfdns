@@ -14,19 +14,25 @@ var Done = errors.New("done")
 type Iterator[T any] struct {
 	fetchNext FetchFn[T]
 	elements  []T
+	isLast    bool
 }
 
-type FetchFn[T any] func(ctx context.Context) ([]T, error)
+type FetchFn[T any] func(ctx context.Context) (batch []T, last bool, _ error)
 
 func (it *Iterator[T]) Next(ctx context.Context) (retElm T, err error) {
-	if len(it.elements) == 0 {
+	if len(it.elements) == 0 && !it.isLast {
 		var elements []T
-		elements, err = it.fetchNext(ctx)
+		elements, it.isLast, err = it.fetchNext(ctx)
 		if err != nil {
 			return
 		}
 
 		it.elements = elements
+	}
+
+	if len(it.elements) == 0 {
+		err = Done
+		return
 	}
 
 	retElm = it.elements[0]

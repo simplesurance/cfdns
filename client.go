@@ -48,6 +48,9 @@ func runWithRetry[TREQ any, TRESP commonResponseSetter](
 			var err error
 			resp, err = runOnce[TREQ, TRESP](ctx, logger, req)
 
+			if err != nil {
+				panic(err)
+			}
 			return err
 		})
 
@@ -98,7 +101,10 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	mergeHeaders(req.Header, treq.headers)
 
 	// credentials
-	treq.client.creds.configure(req)
+	err = treq.client.creds.configure(req)
+	if err != nil {
+		return // allow retry
+	}
 
 	// send the request
 	logger.D("Sending HTTP request to " + theurl.String())
@@ -137,16 +143,6 @@ func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response) 
 	}
 
 	err = json.Unmarshal(respBody, &resp.body)
-	if err != nil {
-		err = errors.Join(err, HTTPError{
-			Code:    httpResp.StatusCode,
-			RawBody: respBody,
-			Headers: resp.headers,
-		})
-		return
-	}
-
-	err = json.NewDecoder(httpResp.Body).Decode(&resp)
 	if err != nil {
 		err = errors.Join(err, HTTPError{
 			Code:    httpResp.StatusCode,
