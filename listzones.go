@@ -9,8 +9,6 @@ import (
 	"github.com/simplesurance/cfdns/logs"
 )
 
-const itemsPerPage = 100
-
 // Listzones lists zones on CloudFlare.
 //
 // API Reference: https://developers.cloudflare.com/api/operations/zones-get

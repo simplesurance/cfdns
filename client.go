@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
 	"time"
@@ -47,10 +49,6 @@ func runWithRetry[TREQ any, TRESP commonResponseSetter](
 		retryFactor, retryMaxAttempts, func() error {
 			var err error
 			resp, err = runOnce[TREQ, TRESP](ctx, logger, req)
-
-			if err != nil {
-				panic(err)
-			}
 			return err
 		})
 
@@ -111,20 +109,27 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	resp, err := treq.client.cfg.httpClient.Do(req)
 	if err != nil {
 		// errors from Do() may be permanent or not, it is not possible to
-		// determine precisely; allowing retry
-		return
+		// determine precisely
+		return // allow retry
 	}
 
 	// handle response
 	if resp.StatusCode >= 400 {
-		err = handleErrorResponse(resp)
+		err = handleErrorResponse(resp, logger)
+
+		var httpErr HTTPError
+		if errors.As(err, &httpErr) && httpErr.IsPermanent() {
+			err = retry.PermanentError{Cause: err}
+			return
+		}
+
 		return
 	}
 
-	return handleSuccessResponse[TRESP](resp)
+	return handleSuccessResponse[TRESP](resp, logger)
 }
 
-func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response) (
+func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, logger *logs.Logger) (
 	resp response[TRESP],
 	err error,
 ) {
@@ -155,19 +160,42 @@ func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response) 
 	return
 }
 
-func handleErrorResponse(resp *http.Response) error {
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
+func handleErrorResponse(resp *http.Response, logger *logs.Logger) error {
+	// the error response must always support errors.As(err, HTTPError)
 	httpErr := HTTPError{
 		Code:    resp.StatusCode,
-		RawBody: respBody,
 		Headers: resp.Header,
 	}
 
-	return httpErr
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %v; %w", err, httpErr)
+	}
+
+	httpErr.RawBody = respBody
+
+	// try to parse the CloudFlare error objects
+	mediaType, _, err := mime.ParseMediaType(resp.Header.Get("content-type"))
+	if err != nil {
+		return fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q (%v); %w",
+			resp.Header.Get("content-type"), err, httpErr)
+	}
+
+	if mediaType != "application/json" {
+		return fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q\n%w",
+			resp.Header.Get("content-type"), httpErr)
+	}
+
+	var cfcommon cfResponseCommon
+	err = json.Unmarshal(respBody, &cfcommon)
+	if err != nil {
+		return fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %v; %w", err, httpErr)
+	}
+
+	return CloudFlareError{
+		cfResponseCommon: cfcommon,
+		HTTPError:        httpErr,
+	}
 }
 
 // mergeHeaders add the values on the second parameter to the first.

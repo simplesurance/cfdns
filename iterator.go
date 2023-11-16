@@ -5,6 +5,8 @@ import (
 	"errors"
 )
 
+const itemsPerPage = 500
+
 var Done = errors.New("done")
 
 // Iterator implements an iterator algorithm from a function that fetches
