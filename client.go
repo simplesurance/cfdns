@@ -106,7 +106,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	}
 
 	// send the request
-	logger.D("Sending HTTP request to " + theurl.String())
+	logger.D(treq.method + " " + theurl.String())
 	resp, err := treq.client.cfg.httpClient.Do(req)
 	if err != nil {
 		// errors from Do() may be permanent or not, it is not possible to
