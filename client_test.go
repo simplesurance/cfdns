@@ -16,6 +16,7 @@ import (
 
 const envToken = "TEST_CF_APITOKEN"
 
+// TestListZones asserts that at least one zone can be listed.
 func TestListZones(t *testing.T) {
 	ctx := context.Background()
 
@@ -27,6 +28,7 @@ func TestListZones(t *testing.T) {
 	client := cfdns.NewClient(cfdns.APIToken(apitoken),
 		cfdns.WithLogger(logs.FromDriver(logtotest.ForTest(t, true), "")))
 
+	listedZones := 0
 	resp := client.ListZones(ctx, &cfdns.ListZonesRequest{})
 	for {
 		item, err := resp.Next(ctx)
@@ -39,5 +41,10 @@ func TestListZones(t *testing.T) {
 		}
 
 		t.Logf("Found zone %s: %s", item.ID, item.Name)
+		listedZones++
+	}
+
+	if listedZones == 0 {
+		t.Errorf("expected at least one zone to be listed")
 	}
 }
