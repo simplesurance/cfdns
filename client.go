@@ -21,6 +21,7 @@ const (
 	retryMaxDelay    = 30 * time.Second
 	retryFactor      = 2
 	retryMaxAttempts = 6
+	itemsPerPage     = 500
 )
 
 func NewClient(creds Credentials, options ...Option) *Client {
