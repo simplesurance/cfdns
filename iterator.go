@@ -39,3 +39,23 @@ func (it *Iterator[T]) Next(ctx context.Context) (retElm T, err error) {
 	it.elements = it.elements[1:]
 	return retElm, nil
 }
+
+// ReadAll is an utility function that reads all elements from an iterator
+// and return them as an array.
+func ReadAll[T any](ctx context.Context, it *Iterator[T]) ([]T, error) {
+	ret := []T{}
+	for {
+		item, err := it.Next(ctx)
+		if err != nil {
+			if errors.Is(err, Done) {
+				break
+			}
+
+			return nil, err
+		}
+
+		ret = append(ret, item)
+	}
+
+	return ret, nil
+}

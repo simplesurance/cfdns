@@ -31,6 +31,14 @@ func (c *Client) ListRecords(
 				"page":      {strconv.Itoa(page)},
 			}
 
+			if req.Name != nil {
+				queryParams.Set("name", *req.Name)
+			}
+
+			if req.Name != nil {
+				queryParams.Set("type", *req.Type)
+			}
+
 			resp, err := runWithRetry[any, *listRecordsAPIResponse](
 				ctx,
 				c.cfg.logger.SubLogger("ListRecords", logs.WithInt("page", page)),
@@ -66,6 +74,8 @@ func (c *Client) ListRecords(
 
 type ListRecordsRequest struct {
 	ZoneID string
+	Name   *string // Name is used to filter by name.
+	Type   *string // Type is used to filter by type.
 }
 
 type ListRecordsResponseItem struct {
