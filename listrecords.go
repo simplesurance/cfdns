@@ -15,7 +15,6 @@ import (
 //
 // API Reference: https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-list-dns-records
 func (c *Client) ListRecords(
-	ctx context.Context,
 	req *ListRecordsRequest,
 ) *Iterator[*ListRecordsResponseItem] {
 	page := 0

@@ -29,7 +29,7 @@ func TestListZones(t *testing.T) {
 	client, _ := getClient(ctx, t)
 
 	listedZones := 0
-	resp := client.ListZones(ctx, &cfdns.ListZonesRequest{})
+	resp := client.ListZones(&cfdns.ListZonesRequest{})
 	for {
 		item, err := resp.Next(ctx)
 		if err != nil {
@@ -95,7 +95,7 @@ func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID s
 		cfdns.WithLogger(logs.FromDriver(logtotest.ForTest(t, true), "")))
 
 	// return the ID of the first zone
-	resp := client.ListZones(ctx, &cfdns.ListZonesRequest{})
+	resp := client.ListZones(&cfdns.ListZonesRequest{})
 	for {
 		item, err := resp.Next(ctx)
 		if err != nil {
@@ -121,7 +121,7 @@ func listRecords(
 	client *cfdns.Client,
 	item *cfdns.ListZonesResponseItem,
 ) {
-	iter := client.ListRecords(ctx, &cfdns.ListRecordsRequest{
+	iter := client.ListRecords(&cfdns.ListRecordsRequest{
 		ZoneID: item.ID,
 	})
 

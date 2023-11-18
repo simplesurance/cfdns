@@ -13,7 +13,6 @@ import (
 //
 // API Reference: https://developers.cloudflare.com/api/operations/zones-get
 func (c *Client) ListZones(
-	ctx context.Context,
 	req *ListZonesRequest,
 ) *Iterator[*ListZonesResponseItem] {
 	page := 0
