@@ -3,7 +3,6 @@ package cfdns
 import (
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/simplesurance/cfdns/logs"
 	"github.com/simplesurance/cfdns/logs/textlogger"
@@ -31,9 +30,9 @@ func applyOptions(opts ...Option) *settings {
 	return &ret
 }
 
-func WithRateLimit(interval time.Duration) Option {
+func WithRateLimiter(ratelim *rate.Limiter) Option {
 	return func(s *settings) {
-		s.ratelim = rate.NewLimiter(rate.Every(interval), 1)
+		s.ratelim = ratelim
 	}
 }
 
