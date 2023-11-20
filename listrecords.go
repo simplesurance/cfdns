@@ -29,13 +29,14 @@ func (c *Client) ListRecords(
 				"direction": {"asc"},
 				"per_page":  {strconv.Itoa(itemsPerPage)},
 				"page":      {strconv.Itoa(page)},
+				"order":     {"type"},
 			}
 
 			if req.Name != nil {
 				queryParams.Set("name", *req.Name)
 			}
 
-			if req.Name != nil {
+			if req.Type != nil {
 				queryParams.Set("type", *req.Type)
 			}
 
@@ -47,8 +48,10 @@ func (c *Client) ListRecords(
 					method:      "GET",
 					path:        fmt.Sprintf("zones/%s/dns_records", url.PathEscape(req.ZoneID)),
 					queryParams: queryParams,
-					headers:     http.Header{},
-					body:        nil,
+					headers: http.Header{
+						"content-type": {"application/json"},
+					},
+					body: nil,
 				})
 
 			if err != nil {

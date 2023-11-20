@@ -50,7 +50,8 @@ func (c *Client) CreateRecord(
 	c.cfg.logger.D(fmt.Sprintf("Record %s %s %s created with ID=%s",
 		req.Name, req.Type, req.Content, resp.body.Result.ID))
 	return &CreateRecordResponse{
-		ID: resp.body.Result.ID,
+		ID:   resp.body.Result.ID,
+		Name: resp.body.Result.Name,
 	}, err
 }
 
@@ -66,7 +67,8 @@ type CreateRecordRequest struct {
 }
 
 type CreateRecordResponse struct {
-	ID string `json:"id"`
+	ID   string
+	Name string
 }
 
 type createRecordAPIRequest struct {
@@ -82,6 +84,7 @@ type createRecordAPIRequest struct {
 type createRecordAPIResponse struct {
 	cfResponseCommon
 	Result struct {
-		ID string `json:"id"`
+		ID   string `json:"id"`
+		Name string `json:"name"`
 	} `json:"result"`
 }

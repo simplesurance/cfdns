@@ -27,6 +27,7 @@ const (
 
 // TestListZones asserts that at least one zone can be listed.
 func TestListZones(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	client, _ := getClient(ctx, t)
 
@@ -54,24 +55,39 @@ func TestListZones(t *testing.T) {
 }
 
 func TestCreateCNAME(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	client, testZoneID := getClient(ctx, t)
+	cname := "CNAME"
 
 	// create a DNS record
 	recName := testRecordName(t)
 	resp, err := client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
 		ZoneID:  testZoneID,
 		Name:    recName,
-		Type:    "CNAME",
+		Type:    cname,
 		Content: "github.com",
 	})
 	if err != nil {
 		t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
 	}
 
+	defer cleanup(ctx, t, client, testZoneID, resp.ID)
+
 	t.Logf("DNS record created with ID=%s", resp.ID)
 
-	cleanup(ctx, t, client, testZoneID, resp.ID)
+	// assert that it is present
+	recs, err := cfdns.ReadAll(ctx, client.ListRecords(&cfdns.ListRecordsRequest{
+		ZoneID: testZoneID,
+		Name:   &resp.Name,
+		Type:   &cname,
+	}))
+
+	if len(recs) != 1 {
+		t.Fatalf("Test created one record with name %q, type %q, but found %+v",
+			recName, "CNAME", recs)
+	}
+
 }
 
 func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID string) {
@@ -139,6 +155,7 @@ var testRecordNameRE = regexp.MustCompile(`^test-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-
 
 // testRecordName creates a random name to be used when creating test
 // DNS records. The name encodes the date, making cleaning-up easier.
+// The cleanup() function will remove test records that encode an old date.
 func testRecordName(t *testing.T) string {
 	rnd := make([]byte, 4)
 	if _, err := rand.Read(rnd); err != nil {
@@ -177,7 +194,11 @@ func cleanup(
 	for {
 		record, err := iter.Next(ctx)
 		if err != nil {
-			t.Logf("Error listing records when looking for old test data")
+			if errors.Is(err, cfdns.Done) {
+				break
+			}
+
+			t.Logf("Error listing records when looking for old test data: %v", err)
 			return
 		}
 
