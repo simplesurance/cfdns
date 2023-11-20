@@ -51,9 +51,9 @@ func (c *Client) UpdateRecord(
 	}
 
 	c.cfg.logger.D(fmt.Sprintf("Record %s (%s %s %s) updated",
-		req.Name, req.Type, req.Content, resp.body.Result.ID))
+		req.RecordID, req.Name, req.Type, req.Content))
 	return &UpdateRecordResponse{
-		ID: resp.body.Result.ID,
+		ModifiedOn: resp.body.Result.ModifiedOn,
 	}, err
 }
 
@@ -70,7 +70,7 @@ type UpdateRecordRequest struct {
 }
 
 type UpdateRecordResponse struct {
-	ID string `json:"id"`
+	ModifiedOn time.Time
 }
 
 type updateRecordAPIRequest struct {
@@ -86,6 +86,6 @@ type updateRecordAPIRequest struct {
 type updateRecordAPIResponse struct {
 	cfResponseCommon
 	Result struct {
-		ID string `json:"id"`
+		ModifiedOn time.Time `json:"modified_on"`
 	} `json:"result"`
 }

@@ -62,6 +62,11 @@ func (c *Client) ListRecords(
 					Name:    v.Name,
 					Type:    v.Type,
 					Content: v.Content,
+					Proxied: v.Proxied,
+				}
+
+				if v.Comment != nil {
+					items[i].Comment = *v.Comment
 				}
 			}
 
@@ -83,6 +88,8 @@ type ListRecordsResponseItem struct {
 	Content string
 	Name    string
 	Type    string
+	Proxied *bool
+	Comment string
 }
 
 type listRecordsAPIResponse struct {
