@@ -22,6 +22,20 @@ type cfResponseCommon struct {
 	} `json:"result_info"`
 }
 
+// IsAnyCFErrorCode returns true if the CloudFlare error includes any
+// of the provided codes.
+func (rc *cfResponseCommon) IsAnyCFErrorCode(code ...int) bool {
+	for _, haveErr := range rc.Errors {
+		for _, wantErr := range code {
+			if haveErr.Code == wantErr {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func (rc *cfResponseCommon) setCFCommonResponse(cf *cfResponseCommon) {
 	*rc = *cf
 }

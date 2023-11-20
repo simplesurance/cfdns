@@ -97,6 +97,73 @@ func TestCreateCNAME(t *testing.T) {
 	assertEquals(t, comment, recs[0].Comment)
 }
 
+// Test a few cases of error to make sure error handling works.
+func TestConflict(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	client, testZoneID := getClient(ctx, t)
+
+	cases := []*struct {
+		typ           string
+		content       string
+		wantErrorCode int
+	}{
+		{
+			typ:           "CNAME",
+			content:       "github.com",
+			wantErrorCode: 81053,
+		},
+		{
+			typ:           "A",
+			content:       "1.1.1.1",
+			wantErrorCode: 81057,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.typ, func(t *testing.T) {
+			t.Parallel()
+			comment := "integration test"
+
+			// create a DNS record
+			recName := testRecordName(t)
+			resp, err := client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
+				ZoneID:  testZoneID,
+				Name:    recName,
+				Type:    tc.typ,
+				Content: tc.content,
+				Comment: &comment,
+			})
+			if err != nil {
+				t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
+			}
+
+			defer cleanup(ctx, t, client, testZoneID, resp.ID)
+
+			// do it again; it must now result in a conflict
+			_, err = client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
+				ZoneID:  testZoneID,
+				Name:    recName,
+				Type:    tc.typ,
+				Content: tc.content,
+				Comment: &comment,
+			})
+
+			var cferr cfdns.CloudFlareError
+			if err == nil || !errors.As(err, &cferr) {
+				t.Fatalf("Expected cfdns.CloudFlareError, got %v", err)
+			}
+
+			if !cferr.IsAnyCFErrorCode(tc.wantErrorCode) {
+				t.Errorf("Expected CloudFlare error %d, got %v",
+					tc.wantErrorCode, cferr)
+			}
+		})
+	}
+
+}
+
 func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID string) {
 	apitoken := os.Getenv(envToken)
 	testzone := os.Getenv(envTestZone)
@@ -245,6 +312,13 @@ func requireNotNil(t *testing.T, v any) {
 	t.Helper()
 	if v == nil {
 		t.Fatalf("Unexpected nil value")
+	}
+}
+
+func requireNil(t *testing.T, v any) {
+	t.Helper()
+	if v != nil {
+		t.Fatalf("Expected nil, got %v", v)
 	}
 }
 
