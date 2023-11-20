@@ -30,10 +30,10 @@ func (c *Client) ListZones(
 				queryParams["name"] = []string{strconv.Itoa(page)}
 			}
 
-			resp, err := runWithRetry[any, *listZoneAPIResponse](
+			resp, err := runWithRetry[*struct{}, *listZoneAPIResponse](
 				ctx,
 				c.cfg.logger.SubLogger("ListZones", logs.WithInt("page", page)),
-				request[any]{
+				request[*struct{}]{
 					client:      c,
 					method:      "GET",
 					path:        "zones",

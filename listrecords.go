@@ -39,10 +39,10 @@ func (c *Client) ListRecords(
 				queryParams.Set("type", *req.Type)
 			}
 
-			resp, err := runWithRetry[any, *listRecordsAPIResponse](
+			resp, err := runWithRetry[*struct{}, *listRecordsAPIResponse](
 				ctx,
 				c.cfg.logger.SubLogger("ListRecords", logs.WithInt("page", page)),
-				request[any]{
+				request[*struct{}]{
 					client:      c,
 					method:      "GET",
 					path:        fmt.Sprintf("zones/%s/dns_records", url.PathEscape(req.ZoneID)),
