@@ -59,6 +59,7 @@ func TestCreateCNAME(t *testing.T) {
 	ctx := context.Background()
 	client, testZoneID := getClient(ctx, t)
 	cname := "CNAME"
+	comment := "integration test"
 
 	// create a DNS record
 	recName := testRecordName(t)
@@ -67,6 +68,7 @@ func TestCreateCNAME(t *testing.T) {
 		Name:    recName,
 		Type:    cname,
 		Content: "github.com",
+		Comment: &comment,
 	})
 	if err != nil {
 		t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
@@ -88,6 +90,11 @@ func TestCreateCNAME(t *testing.T) {
 			recName, "CNAME", recs)
 	}
 
+	assertEquals(t, recName, recs[0].Name)
+	assertEquals(t, cname, recs[0].Type)
+	requireNotNil(t, recs[0].Proxied)
+	assertEquals(t, false, *recs[0].Proxied)
+	assertEquals(t, comment, recs[0].Comment)
 }
 
 func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID string) {
@@ -157,14 +164,17 @@ var testRecordNameRE = regexp.MustCompile(`^test-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-
 // DNS records. The name encodes the date, making cleaning-up easier.
 // The cleanup() function will remove test records that encode an old date.
 func testRecordName(t *testing.T) string {
+	testzone := os.Getenv(envTestZone)
+
 	rnd := make([]byte, 4)
 	if _, err := rand.Read(rnd); err != nil {
 		t.Fatalf("Error reading random number: %v", err)
 	}
 
-	return fmt.Sprintf("test-%s-%s",
+	return fmt.Sprintf("test-%s-%s.%s",
 		time.Now().UTC().Format(testDateFormat),
-		hex.EncodeToString(rnd))
+		hex.EncodeToString(rnd),
+		testzone)
 }
 
 // cleanup removes the records with the provided ID and removes all records
@@ -228,5 +238,20 @@ func cleanup(
 			t.Logf("WARN: error cleaning-up leftovers from previous run. Deleting record %s %s %s (%s) failed: %v",
 				record.ID, record.Name, record.Type, record.Content, err)
 		}
+	}
+}
+
+func requireNotNil(t *testing.T, v any) {
+	t.Helper()
+	if v == nil {
+		t.Fatalf("Unexpected nil value")
+	}
+}
+
+func assertEquals[T comparable](t *testing.T, want, have T) {
+	t.Helper()
+
+	if have != want {
+		t.Errorf("Value does not have the expected value:\nhave: %v\nwant: %v", have, want)
 	}
 }
