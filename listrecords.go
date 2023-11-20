@@ -68,6 +68,11 @@ func (c *Client) ListRecords(
 					Proxied: v.Proxied,
 				}
 
+				if v.TTL != nil {
+					duration := time.Second * time.Duration(*v.TTL)
+					items[i].TTL = &duration
+				}
+
 				if v.Comment != nil {
 					items[i].Comment = *v.Comment
 				}
@@ -93,6 +98,7 @@ type ListRecordsResponseItem struct {
 	Type    string
 	Proxied *bool
 	Comment string
+	TTL     *time.Duration
 }
 
 type listRecordsAPIResponse struct {

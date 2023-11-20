@@ -161,7 +161,70 @@ func TestConflict(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestUpdate(t *testing.T) {
+	t.Parallel()
+	originalComment := "integration test"
+	changedComment := "integration test"
+	cname := "cname"
+
+	ctx := context.Background()
+	client, testZoneID := getClient(ctx, t)
+
+	// create a DNS record
+	recName := testRecordName(t)
+	resp, err := client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
+		ZoneID:  testZoneID,
+		Name:    recName,
+		Type:    cname,
+		Content: "1.github.com",
+		Comment: &originalComment,
+		Proxied: boolPtr(false),
+		TTL:     durationPtr(time.Hour),
+	})
+	if err != nil {
+		t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
+	}
+
+	defer cleanup(ctx, t, client, testZoneID, resp.ID)
+
+	// do it again; it must now result in a conflict
+	_, err = client.UpdateRecord(ctx, &cfdns.UpdateRecordRequest{
+		ZoneID:   testZoneID,
+		RecordID: resp.ID,
+		Name:     recName,
+		Type:     cname,
+		Content:  "simplesurance.de",
+		Comment:  &changedComment,
+		Proxied:  boolPtr(true),
+		TTL:      durationPtr(2 * time.Hour),
+	})
+	if err != nil {
+		t.Fatalf("Error updating DNS record on CloudFlare: %v", err)
+	}
+
+	records, err := cfdns.ReadAll(ctx, client.ListRecords(&cfdns.ListRecordsRequest{
+		ZoneID: testZoneID,
+		Name:   stringPtr(resp.Name),
+		Type:   stringPtr(cname),
+	}))
+	if err != nil {
+		t.Fatalf("Error list DNS record on CloudFlare: %v", err)
+	}
+
+	if len(records) != 1 {
+		t.Fatalf("Expected 1 record, got %v", records)
+	}
+
+	assertEquals(t, "simplesurance.de", records[0].Content)
+	assertEquals(t, changedComment, records[0].Comment)
+
+	requireNotNil(t, records[0].TTL)
+	requireNotNil(t, records[0].Proxied)
+
+	assertEquals(t, true, *records[0].Proxied)
+	assertEquals(t, 2*time.Hour, *records[0].TTL)
 }
 
 func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID string) {
@@ -328,4 +391,16 @@ func assertEquals[T comparable](t *testing.T, want, have T) {
 	if have != want {
 		t.Errorf("Value does not have the expected value:\nhave: %v\nwant: %v", have, want)
 	}
+}
+
+func boolPtr(v bool) *bool {
+	return &v
+}
+
+func durationPtr(d time.Duration) *time.Duration {
+	return &d
+}
+
+func stringPtr(v string) *string {
+	return &v
 }
