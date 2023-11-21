@@ -40,9 +40,10 @@ func (l *Logger) SubLogger(opts ...Option) *Logger {
 
 // D sends a debug log message. The design of this function is different
 // from the other log levels because usually messages from this levels
-// should normally be suppressed in production. This design allows verbose
-// and computationally expensive log messages to be included without
-// have any significant impact when this debug level is not present.
+// should normally be suppressed in production. The provided function
+// will not be executed if logging debug messages is not explicitly
+// enabled, allowing expensive debug messages that will only be payed
+// if enabled.
 func (l *Logger) D(lf func(log DebugFn)) {
 	if !l.debugEnabledFn() {
 		return

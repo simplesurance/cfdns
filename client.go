@@ -10,6 +10,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/simplesurance/cfdns/logs"
@@ -88,10 +89,6 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 		return
 	}
 
-	logger.D(func(log logs.DebugFn) {
-		log(fmt.Sprintf("Request body: %s", reqBody))
-	})
-
 	// request
 	req, err := http.NewRequestWithContext(ctx, treq.method, theurl.String(),
 		bytes.NewReader(reqBody))
@@ -110,9 +107,6 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	}
 
 	// send the request
-	logger.D(func(log logs.DebugFn) {
-		log(treq.method + " " + theurl.String())
-	})
 	resp, err := treq.client.cfg.httpClient.Do(req)
 	if err != nil {
 		// errors from Do() may be permanent or not, it is not possible to
@@ -123,6 +117,8 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	// handle response
 	if resp.StatusCode >= 400 {
 		err = handleErrorResponse(resp, logger)
+
+		logFullRequestError(logger, treq, reqBody, err)
 
 		var httpErr HTTPError
 		if errors.As(err, &httpErr) && httpErr.IsPermanent() {
@@ -210,4 +206,40 @@ func mergeHeaders(dst, target http.Header) {
 	for k, v := range target {
 		dst[k] = v
 	}
+}
+
+func logFullRequestError[T any](logger *logs.Logger, treq request[T], reqBody []byte, err error) {
+	logger.D(func(log logs.DebugFn) {
+		// request
+		reqHeaders := make([]string, 0, len(treq.headers))
+		for k, v := range treq.headers {
+			reqHeaders = append(reqHeaders, k+": "+strings.Join(v, ", "))
+		}
+
+		// response
+		var resp string
+		var httpErr HTTPError
+		if errors.As(err, &httpErr) {
+			respHeaders := make([]string, 0, len(httpErr.Headers))
+			for k, v := range httpErr.Headers {
+				respHeaders = append(respHeaders, k+": "+strings.Join(v, ", "))
+			}
+
+			resp = fmt.Sprintf("RESPONSE: %d\n%s\n\n%s",
+				httpErr.Code,
+				strings.Join(respHeaders, "\n"),
+				httpErr.RawBody)
+		} else {
+			resp = fmt.Sprintf("Error %T: %v", err, err)
+		}
+
+		// full log message
+		log(fmt.Sprintf("REQUEST\n%s %s\n%s\n\n%s\n\n%s",
+			treq.method,
+			treq.path,
+			strings.Join(reqHeaders, "\n"),
+			reqBody,
+			resp,
+		))
+	})
 }
