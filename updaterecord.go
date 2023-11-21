@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/simplesurance/cfdns/logs"
 )
 
 // UpdateRecord updates a DNS record on CloudFlare.
@@ -20,15 +22,16 @@ func (c *Client) UpdateRecord(
 		intttl := int(req.TTL.Seconds())
 		ttl = &intttl
 	}
+	c.cfg.logger.W(fmt.Sprintf("req TTL: %v, secs: %d", req.TTL, *ttl))
 
 	// PUT https://api.cloudflare.com/client/v4/zones/{zone_identifier}/dns_records/{identifier}
 	resp, err := runWithRetry[*updateRecordAPIRequest, *updateRecordAPIResponse](
 		ctx,
-		c.cfg.logger.SubLogger("UpdateDNSRecord"),
+		c.cfg.logger.SubLogger(logs.WithPrefix("UpdateDNSRecord")),
 		request[*updateRecordAPIRequest]{
 			client: c,
 			method: "PUT",
-			path: fmt.Sprintf("v4/zones/%s/dns_records/%s",
+			path: fmt.Sprintf("zones/%s/dns_records/%s",
 				url.PathEscape(req.ZoneID),
 				url.PathEscape(req.RecordID)),
 			queryParams: url.Values{},
@@ -50,8 +53,10 @@ func (c *Client) UpdateRecord(
 		return nil, err
 	}
 
-	c.cfg.logger.D(fmt.Sprintf("Record %s (%s %s %s) updated",
-		req.RecordID, req.Name, req.Type, req.Content))
+	c.cfg.logger.D(func(log logs.DebugFn) {
+		log(fmt.Sprintf("Record %s (%s %s %s) updated",
+			req.RecordID, req.Name, req.Type, req.Content))
+	})
 	return &UpdateRecordResponse{
 		ModifiedOn: resp.body.Result.ModifiedOn,
 	}, err

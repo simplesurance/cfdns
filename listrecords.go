@@ -42,7 +42,7 @@ func (c *Client) ListRecords(
 
 			resp, err := runWithRetry[*struct{}, *listRecordsAPIResponse](
 				ctx,
-				c.cfg.logger.SubLogger("ListRecords", logs.WithInt("page", page)),
+				c.cfg.logger.SubLogger(logs.WithPrefix("ListRecords"), logs.WithInt("page", page)),
 				request[*struct{}]{
 					client:      c,
 					method:      "GET",

@@ -88,6 +88,10 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 		return
 	}
 
+	logger.D(func(log logs.DebugFn) {
+		log(fmt.Sprintf("Request body: %s", reqBody))
+	})
+
 	// request
 	req, err := http.NewRequestWithContext(ctx, treq.method, theurl.String(),
 		bytes.NewReader(reqBody))
@@ -106,7 +110,9 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	}
 
 	// send the request
-	logger.D(treq.method + " " + theurl.String())
+	logger.D(func(log logs.DebugFn) {
+		log(treq.method + " " + theurl.String())
+	})
 	resp, err := treq.client.cfg.httpClient.Do(req)
 	if err != nil {
 		// errors from Do() may be permanent or not, it is not possible to

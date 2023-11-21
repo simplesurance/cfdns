@@ -187,7 +187,7 @@ func TestUpdate(t *testing.T) {
 		t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
 	}
 
-	defer cleanup(ctx, t, client, testZoneID, resp.ID)
+	//defer cleanup(ctx, t, client, testZoneID, resp.ID)
 
 	// do it again; it must now result in a conflict
 	_, err = client.UpdateRecord(ctx, &cfdns.UpdateRecordRequest{
@@ -236,7 +236,8 @@ func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID s
 	}
 
 	client := cfdns.NewClient(cfdns.APIToken(apitoken),
-		cfdns.WithLogger(logs.FromDriver(logtotest.ForTest(t, true), "")))
+		cfdns.WithLogger(logs.New(logtotest.ForTest(t, true),
+			logs.WithDebugEnabledFn(func() bool { return true }))))
 
 	// return the ID of the first zone
 	resp := client.ListZones(&cfdns.ListZonesRequest{})

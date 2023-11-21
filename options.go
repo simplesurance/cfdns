@@ -20,7 +20,7 @@ type settings struct {
 func applyOptions(opts ...Option) *settings {
 	ret := settings{
 		ratelim:    rate.NewLimiter(rate.Every(defaultRequestInterval), 1),
-		logger:     logs.FromDriver(textlogger.New(os.Stdout, os.Stderr), ""),
+		logger:     logs.New(textlogger.New(os.Stdout, os.Stderr)),
 		httpClient: http.DefaultClient,
 	}
 	for _, opt := range opts {

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/simplesurance/cfdns/logs"
 )
 
 // DeleteRecord deletes a DNS record on CloudFlare.
@@ -16,7 +18,7 @@ func (c *Client) DeleteRecord(
 ) (*DeleteRecordResponse, error) {
 	_, err := runWithRetry[*struct{}, *deleteRecordAPIResponse](
 		ctx,
-		c.cfg.logger.SubLogger("DeleteDNSRecord"),
+		c.cfg.logger.SubLogger(logs.WithPrefix("DeleteDNSRecord")),
 		request[*struct{}]{
 			client: c,
 			method: "DELETE",
@@ -34,7 +36,9 @@ func (c *Client) DeleteRecord(
 		return nil, err
 	}
 
-	c.cfg.logger.D(fmt.Sprintf("Record %s deleted", req.RecordID))
+	c.cfg.logger.D(func(log logs.DebugFn) {
+		log(fmt.Sprintf("Record %s deleted", req.RecordID))
+	})
 	return &DeleteRecordResponse{}, err
 }
 
