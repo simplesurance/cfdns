@@ -57,7 +57,8 @@ func TestRetry(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			logger := logs.FromDriver(logtotest.ForTest(t, true), "")
+			logger := logs.New(logtotest.ForTest(t, true),
+				logs.WithDebugEnabledFn(func() bool { return true }))
 			fCallCount := 0
 
 			err := retry.ExpBackoff(
@@ -97,7 +98,8 @@ func TestRetry(t *testing.T) {
 }
 
 func TestContextCancel(t *testing.T) {
-	logger := logs.FromDriver(logtotest.ForTest(t, true), "")
+	logger := logs.New(logtotest.ForTest(t, true),
+		logs.WithDebugEnabledFn(func() bool { return true }))
 
 	ctx, done := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer done()
