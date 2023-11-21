@@ -6,29 +6,54 @@ import (
 	"time"
 )
 
-func FromDriver(d Driver, prefix string) *Logger {
-	return &Logger{driver: d, prefix: prefix}
+func New(d Driver, opt ...Option) *Logger {
+	ret := &Logger{
+		driver:  d,
+		options: opt,
+	}
+
+	ret.loadOptions()
+
+	return ret
 }
 
 type Logger struct {
-	driver  Driver
-	prefix  string
-	options []Option
+	driver         Driver
+	debugEnabledFn func() bool
+	options        []Option
 }
 
-func (l *Logger) SubLogger(prefix string, opts ...Option) *Logger {
+func (l *Logger) SubLogger(opts ...Option) *Logger {
 	options := []Option{}
 	options = append(options, l.options...)
 	options = append(options, opts...)
 
-	return &Logger{
+	ret := &Logger{
 		driver:  l.driver,
-		prefix:  prefix,
 		options: options,
 	}
+
+	ret.loadOptions()
+
+	return ret
 }
 
-func (l *Logger) D(msg string, opt ...Option) {
+// D sends a debug log message. The design of this function is different
+// from the other log levels because usually messages from this levels
+// should normally be suppressed in production. This design allows verbose
+// and computationally expensive log messages to be included without
+// have any significant impact when this debug level is not present.
+func (l *Logger) D(lf func(log DebugFn)) {
+	if !l.debugEnabledFn() {
+		return
+	}
+
+	lf(l.d)
+}
+
+type DebugFn func(msg string, opt ...Option)
+
+func (l *Logger) d(msg string, opt ...Option) {
 	l.driver.GetHelper()()
 	l.log(msg, Debug, opt...)
 }
@@ -51,38 +76,52 @@ func (l *Logger) E(msg string, opt ...Option) {
 func (l *Logger) log(msg string, sev Severity, opt ...Option) {
 	l.driver.GetHelper()()
 
-	opts2 := applyOptions(opt...)
-	opts := applyOptions(l.options...)
-	maps.Copy(opts.Tags, opts2.Tags)
+	loggerOpts := applyOptions(l.options...)
+	messageOpts := applyOptions(opt...)
+
+	tags := map[string]any{}
+	maps.Copy(tags, loggerOpts.Tags)
+	maps.Copy(tags, messageOpts.Tags)
 
 	msgWithPrefix := msg
-	if l.prefix != "" {
-		msgWithPrefix = l.prefix + ": " + msg
+	if loggerOpts.logPrefix != "" {
+		msgWithPrefix = loggerOpts.logPrefix + ": " + msg
 	}
 
 	entry := &Entry{
 		Timestamp: time.Now(),
 		Message:   msgWithPrefix,
 		Severity:  sev,
-		Tags:      map[string]any{},
+		Tags:      tags,
 	}
 
 	// include caller
-	_, file, line, ok := runtime.Caller(opts.callersToSkip)
+	_, file, line, ok := runtime.Caller(loggerOpts.callersToSkip)
 	if ok {
 		entry.Caller.File = file
 		entry.Caller.Line = line
 	}
 
-	// include tags
-	for k, v := range opts.Tags {
-		entry.Tags[k] = v
-	}
-
 	l.driver.Send(entry)
+}
+
+// loadOptions apply options that change the logger. I can only be called
+// before log messages are sent to it.
+func (l *Logger) loadOptions() {
+	settings := applyOptions(l.options...)
+
+	l.debugEnabledFn = settings.debugEnabledFn
 }
 
 type Caller struct {
 	File string `json:"file"`
 	Line int    `json:"line"`
+}
+
+func trueFn() bool {
+	return true
+}
+
+func falseFn() bool {
+	return false
 }
