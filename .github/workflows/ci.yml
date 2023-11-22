@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        go: [1.21]
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: build
+        run: "go build ./..."
+
+  test:
+    strategy:
+      matrix:
+        go: [1.21]
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: build
+        env:
+          TEST_CF_ZONE_NAME: "${{ secrets.TEST_CF_ZONE_NAME }}"
+          TEST_CF_APITOKEN: "${{ vars.TEST_CF_APITOKEN }}"
+        run: go test ./...
+
+  golangci:
+    strategy:
+      matrix:
+        go: [1.19]
+        lint: [v1.50.1]
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: ${{ matrix.lint }}
