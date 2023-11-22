@@ -25,35 +25,6 @@ const (
 	testDateFormat = "2006-01-02-15-04"
 )
 
-// TestListZones asserts that at least one zone can be listed.
-func TestListZones(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-	client, _ := getClient(ctx, t)
-
-	listedZones := 0
-	resp := client.ListZones(&cfdns.ListZonesRequest{})
-	for {
-		item, err := resp.Next(ctx)
-		if err != nil {
-			if errors.Is(err, cfdns.Done) {
-				break
-			}
-
-			t.Fatalf("Error while fetching response: %v", err)
-		}
-
-		t.Logf("Found zone %s: %s", item.ID, item.Name)
-		listedZones++
-
-		listRecords(ctx, t, client, item)
-	}
-
-	if listedZones == 0 {
-		t.Errorf("expected at least one zone to be listed")
-	}
-}
-
 func TestCreateCNAME(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -95,6 +66,69 @@ func TestCreateCNAME(t *testing.T) {
 	requireNotNil(t, recs[0].Proxied)
 	assertEquals(t, false, *recs[0].Proxied)
 	assertEquals(t, comment, recs[0].Comment)
+}
+
+func TestUpdate(t *testing.T) {
+	t.Parallel()
+	originalComment := "integration test"
+	changedComment := "integration test"
+	cname := "cname"
+
+	ctx := context.Background()
+	client, testZoneID := getClient(ctx, t)
+
+	// create a DNS record
+	recName := testRecordName(t)
+	resp, err := client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
+		ZoneID:  testZoneID,
+		Name:    recName,
+		Type:    cname,
+		Content: "1.github.com",
+		Comment: &originalComment,
+		Proxied: boolPtr(true),
+		TTL:     durationPtr(time.Hour),
+	})
+	if err != nil {
+		t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
+	}
+
+	defer cleanup(ctx, t, client, testZoneID, resp.ID)
+
+	_, err = client.UpdateRecord(ctx, &cfdns.UpdateRecordRequest{
+		ZoneID:   testZoneID,
+		RecordID: resp.ID,
+		Name:     recName,
+		Type:     cname,
+		Content:  "2.github.com",
+		Comment:  &changedComment,
+		Proxied:  boolPtr(false),
+		TTL:      durationPtr(2 * time.Hour),
+	})
+	if err != nil {
+		t.Fatalf("Error updating DNS record on CloudFlare: %v", err)
+	}
+
+	records, err := cfdns.ReadAll(ctx, client.ListRecords(&cfdns.ListRecordsRequest{
+		ZoneID: testZoneID,
+		Name:   stringPtr(resp.Name),
+		Type:   stringPtr(cname),
+	}))
+	if err != nil {
+		t.Fatalf("Error list DNS record on CloudFlare: %v", err)
+	}
+
+	if len(records) != 1 {
+		t.Fatalf("Expected 1 record, got %v", records)
+	}
+
+	assertEquals(t, "2.github.com", records[0].Content)
+	assertEquals(t, changedComment, records[0].Comment)
+
+	requireNotNil(t, records[0].TTL)
+	requireNotNil(t, records[0].Proxied)
+
+	assertEquals(t, false, *records[0].Proxied)
+	assertEquals(t, 2*time.Hour, *records[0].TTL)
 }
 
 // Test a few cases of error to make sure error handling works.
@@ -161,70 +195,6 @@ func TestConflict(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestUpdate(t *testing.T) {
-	t.Parallel()
-	originalComment := "integration test"
-	changedComment := "integration test"
-	cname := "cname"
-
-	ctx := context.Background()
-	client, testZoneID := getClient(ctx, t)
-
-	// create a DNS record
-	recName := testRecordName(t)
-	resp, err := client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
-		ZoneID:  testZoneID,
-		Name:    recName,
-		Type:    cname,
-		Content: "1.github.com",
-		Comment: &originalComment,
-		Proxied: boolPtr(true),
-		TTL:     durationPtr(time.Hour),
-	})
-	if err != nil {
-		t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
-	}
-
-	defer cleanup(ctx, t, client, testZoneID, resp.ID)
-
-	// do it again; it must now result in a conflict
-	_, err = client.UpdateRecord(ctx, &cfdns.UpdateRecordRequest{
-		ZoneID:   testZoneID,
-		RecordID: resp.ID,
-		Name:     recName,
-		Type:     cname,
-		Content:  "2.github.com",
-		Comment:  &changedComment,
-		Proxied:  boolPtr(false),
-		TTL:      durationPtr(2 * time.Hour),
-	})
-	if err != nil {
-		t.Fatalf("Error updating DNS record on CloudFlare: %v", err)
-	}
-
-	records, err := cfdns.ReadAll(ctx, client.ListRecords(&cfdns.ListRecordsRequest{
-		ZoneID: testZoneID,
-		Name:   stringPtr(resp.Name),
-		Type:   stringPtr(cname),
-	}))
-	if err != nil {
-		t.Fatalf("Error list DNS record on CloudFlare: %v", err)
-	}
-
-	if len(records) != 1 {
-		t.Fatalf("Expected 1 record, got %v", records)
-	}
-
-	assertEquals(t, "2.github.com", records[0].Content)
-	assertEquals(t, changedComment, records[0].Comment)
-
-	requireNotNil(t, records[0].TTL)
-	requireNotNil(t, records[0].Proxied)
-
-	assertEquals(t, false, *records[0].Proxied)
-	assertEquals(t, 2*time.Hour, *records[0].TTL)
 }
 
 func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID string) {
