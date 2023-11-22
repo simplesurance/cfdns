@@ -180,14 +180,14 @@ func TestUpdate(t *testing.T) {
 		Type:    cname,
 		Content: "1.github.com",
 		Comment: &originalComment,
-		Proxied: boolPtr(false),
+		Proxied: boolPtr(true),
 		TTL:     durationPtr(time.Hour),
 	})
 	if err != nil {
 		t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
 	}
 
-	//defer cleanup(ctx, t, client, testZoneID, resp.ID)
+	defer cleanup(ctx, t, client, testZoneID, resp.ID)
 
 	// do it again; it must now result in a conflict
 	_, err = client.UpdateRecord(ctx, &cfdns.UpdateRecordRequest{
@@ -195,9 +195,9 @@ func TestUpdate(t *testing.T) {
 		RecordID: resp.ID,
 		Name:     recName,
 		Type:     cname,
-		Content:  "simplesurance.de",
+		Content:  "2.github.com",
 		Comment:  &changedComment,
-		Proxied:  boolPtr(true),
+		Proxied:  boolPtr(false),
 		TTL:      durationPtr(2 * time.Hour),
 	})
 	if err != nil {
@@ -217,13 +217,13 @@ func TestUpdate(t *testing.T) {
 		t.Fatalf("Expected 1 record, got %v", records)
 	}
 
-	assertEquals(t, "simplesurance.de", records[0].Content)
+	assertEquals(t, "2.github.com", records[0].Content)
 	assertEquals(t, changedComment, records[0].Comment)
 
 	requireNotNil(t, records[0].TTL)
 	requireNotNil(t, records[0].Proxied)
 
-	assertEquals(t, true, *records[0].Proxied)
+	assertEquals(t, false, *records[0].Proxied)
 	assertEquals(t, 2*time.Hour, *records[0].TTL)
 }
 

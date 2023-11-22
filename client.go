@@ -73,15 +73,6 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 		return
 	}
 
-	// url
-	theurl, err := url.Parse(baseURL + "/" + treq.path)
-	if err != nil {
-		err = retry.PermanentError{Cause: err}
-		return
-	}
-
-	theurl.RawQuery = treq.queryParams.Encode()
-
 	// request body
 	var reqBody []byte
 	if treq.body != nil {
@@ -93,7 +84,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	}
 
 	// request
-	req, err := http.NewRequestWithContext(ctx, treq.method, theurl.String(),
+	req, err := http.NewRequestWithContext(ctx, treq.method, requestURL(treq),
 		bytes.NewReader(reqBody))
 	if err != nil {
 		err = retry.PermanentError{Cause: err}
@@ -138,33 +129,36 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 }
 
 func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, logger *logs.Logger) (
-	resp *response[TRESP],
-	err error,
+	*response[TRESP],
+	error,
 ) {
-	resp.code = httpResp.StatusCode
-	resp.headers = httpResp.Header
+	var ret response[TRESP]
 
-	resp.rawBody, err = io.ReadAll(httpResp.Body)
+	ret.code = httpResp.StatusCode
+	ret.headers = httpResp.Header
+
+	var err error
+	ret.rawBody, err = io.ReadAll(httpResp.Body)
 	if err != nil {
-		err = errors.Join(err, HTTPError{
+		// allow retry
+		return nil, errors.Join(err, HTTPError{
 			Code:    httpResp.StatusCode,
-			RawBody: resp.rawBody,
-			Headers: resp.headers,
+			RawBody: ret.rawBody,
+			Headers: ret.headers,
 		})
-		return // allow retry
 	}
 
-	err = json.Unmarshal(resp.rawBody, &resp.body)
+	err = json.Unmarshal(ret.rawBody, &ret.body)
 	if err != nil {
-		err = errors.Join(err, HTTPError{
+		// allow retry
+		return nil, errors.Join(err, HTTPError{
 			Code:    httpResp.StatusCode,
-			RawBody: resp.rawBody,
-			Headers: resp.headers,
+			RawBody: ret.rawBody,
+			Headers: ret.headers,
 		})
-		return // allow retry
 	}
 
-	return
+	return &ret, nil
 }
 
 func handleErrorResponse(resp *http.Response, logger *logs.Logger) error {
@@ -213,73 +207,81 @@ func handleErrorResponse(resp *http.Response, logger *logs.Logger) error {
 
 func logFullRequestError[T any](logger *logs.Logger, treq *request[T], reqBody []byte, err error) {
 	logger.D(func(log logs.DebugFn) {
+		msg := &bytes.Buffer{}
+
 		// request
-		reqHeaders := make([]string, 0, len(treq.headers))
+		fmt.Fprintln(msg, "REQUEST:")
+		fmt.Fprintf(msg, "%s %s\n", treq.method, requestURL(treq))
 		for k, v := range treq.headers {
-			reqHeaders = append(reqHeaders, k+": "+strings.Join(v, ", "))
+			fmt.Fprintf(msg, "%s: %s\n", k, strings.Join(v, ", "))
+		}
+		fmt.Fprintln(msg)
+		if treq.body != nil {
+			fmt.Fprintf(msg, "%s\n\n", reqBody)
 		}
 
-		// response
-		var resp string
 		var httpErr HTTPError
 		if errors.As(err, &httpErr) {
-			respHeaders := make([]string, 0, len(httpErr.Headers))
+			fmt.Fprintf(msg, "RESPONSE: %d\n", httpErr.Code)
 			for k, v := range httpErr.Headers {
-				respHeaders = append(respHeaders, k+": "+strings.Join(v, ", "))
+				fmt.Fprintf(msg, "%s: %s\n", k, strings.Join(v, ", "))
 			}
-
-			resp = fmt.Sprintf("RESPONSE: %d\n%s\n\n%s",
-				httpErr.Code,
-				strings.Join(respHeaders, "\n"),
-				httpErr.RawBody)
+			fmt.Fprintln(msg)
+			fmt.Fprintf(msg, "%s", httpErr.RawBody)
 		} else {
-			resp = fmt.Sprintf("Error %T: %v", err, err)
+			// for the cases where we didn't go a response from the server
+			fmt.Fprintf(msg, "Response: Go error %T: %v", err, err)
 		}
 
-		// full log message
-		log(fmt.Sprintf("REQUEST\n%s %s\n%s\n\n%s\n\n%s",
-			treq.method,
-			treq.path,
-			strings.Join(reqHeaders, "\n"),
-			reqBody,
-			resp,
-		))
+		log("Failed REST call to CloudFlare:\n" + msg.String())
 	})
 }
 
 func logFullHTTPRequestSuccess[TREQ any, TRESP commonResponseSetter](logger *logs.Logger, treq *request[TREQ], reqBody []byte, resp *response[TRESP]) {
 	logger.D(func(log logs.DebugFn) {
+		msg := &bytes.Buffer{}
+
 		// request
-		reqHeaders := make([]string, 0, len(treq.headers))
+		fmt.Fprintln(msg, "REQUEST:")
+		fmt.Fprintf(msg, "%s %s\n", treq.method, requestURL(treq))
 		for k, v := range treq.headers {
-			reqHeaders = append(reqHeaders, k+": "+strings.Join(v, ", "))
+			fmt.Fprintf(msg, "%s: %s\n", k, strings.Join(v, ", "))
+		}
+		fmt.Fprintln(msg)
+		if treq.body != nil {
+			fmt.Fprintf(msg, "%s\n\n", reqBody)
 		}
 
 		// response
-		respHeaders := make([]string, 0, len(resp.headers))
+		fmt.Fprintf(msg, "RESPONSE: %d\n", resp.code)
 		for k, v := range resp.headers {
-			respHeaders = append(respHeaders, k+": "+strings.Join(v, ", "))
+			fmt.Fprintf(msg, "%s: %s\n", k, strings.Join(v, ", "))
 		}
+		fmt.Fprintln(msg)
+		fmt.Fprintf(msg, "%s", resp.rawBody)
 
-		resp := fmt.Sprintf("RESPONSE: %d\n%s\n\n%s",
-			resp.code,
-			strings.Join(respHeaders, "\n"),
-			resp.rawBody)
-
-		// full log message
-		log(fmt.Sprintf("REQUEST\n%s %s\n%s\n\n%s\n\n%s",
-			treq.method,
-			treq.path,
-			strings.Join(reqHeaders, "\n"),
-			reqBody,
-			resp,
-		))
+		log("Successful request to CloudFlare:\n" + msg.String())
 	})
 }
 
-// mergeHeaders add the values on the second parameter to the first.
+// mergeHeaders add the values on the second parameter to the first. In case
+// of duplications, the second parameter "wins".
 func mergeHeaders(dst, target http.Header) {
 	for k, v := range target {
 		dst[k] = v
 	}
+}
+
+func requestURL[T any](treq *request[T]) string {
+	urlstring := baseURL + "/" + treq.path
+	theurl, err := url.Parse(urlstring)
+	if err != nil {
+		// this only happens in case of coding error on cfapi
+		panic(fmt.Sprintf("URL %q is invalid; created from request %v",
+			urlstring, treq))
+	}
+
+	theurl.RawQuery = treq.queryParams.Encode()
+
+	return theurl.String()
 }

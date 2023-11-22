@@ -22,7 +22,6 @@ func (c *Client) UpdateRecord(
 		intttl := int(req.TTL.Seconds())
 		ttl = &intttl
 	}
-	c.cfg.logger.W(fmt.Sprintf("req TTL: %v, secs: %d", req.TTL, *ttl))
 
 	// PUT https://api.cloudflare.com/client/v4/zones/{zone_identifier}/dns_records/{identifier}
 	resp, err := runWithRetry[updateRecordAPIRequest, *updateRecordAPIResponse](

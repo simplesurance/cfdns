@@ -33,7 +33,6 @@ type HTTPError struct {
 }
 
 func (e HTTPError) Error() string {
-	// TODO add more details
 	msg := &bytes.Buffer{}
 
 	fmt.Fprintf(msg, "HTTP %d\n", e.Code)
