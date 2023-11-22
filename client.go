@@ -95,7 +95,9 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	mergeHeaders(req.Header, treq.headers)
 
 	// credentials
-	err = treq.client.creds.configure(req)
+	err = treq.client.creds.configure(
+		logger.SubLogger(logs.WithPrefix("Authorization")),
+		req)
 	if err != nil {
 		return // allow retry
 	}
