@@ -38,8 +38,8 @@ jobs:
           cache: true
       - name: build
         env:
-          TEST_CF_ZONE_NAME: "${{ secrets.TEST_CF_ZONE_NAME }}"
-          TEST_CF_APITOKEN: "${{ vars.TEST_CF_APITOKEN }}"
+          TEST_CF_ZONE_NAME: "${{ vars.TEST_CF_ZONE_NAME }}"
+          TEST_CF_APITOKEN: "${{ secrets.TEST_CF_APITOKEN }}"
         run: go test ./...
 
   golangci:
