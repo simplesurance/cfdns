@@ -50,11 +50,15 @@ func TestCreateCNAME(t *testing.T) {
 	t.Logf("DNS record created with ID=%s", resp.ID)
 
 	// assert that it is present
-	recs, err := cfdns.ReadAll(ctx, client.ListRecords(&cfdns.ListRecordsRequest{
+	var recs []*cfdns.ListRecordsResponseItem
+	recs, err = cfdns.ReadAll(ctx, client.ListRecords(&cfdns.ListRecordsRequest{
 		ZoneID: testZoneID,
 		Name:   &resp.Name,
 		Type:   &cname,
 	}))
+	if err != nil {
+		t.Fatalf("Error listing DNS records: %v", err)
+	}
 
 	if len(recs) != 1 {
 		t.Fatalf("Test created one record with name %q, type %q, but found %+v",
@@ -231,35 +235,6 @@ func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID s
 	return nil, ""
 }
 
-func listRecords(
-	ctx context.Context,
-	t *testing.T,
-	client *cfdns.Client,
-	item *cfdns.ListZonesResponseItem,
-) {
-	iter := client.ListRecords(&cfdns.ListRecordsRequest{
-		ZoneID: item.ID,
-	})
-
-	totalRecords := 0
-	for {
-		rec, err := iter.Next(ctx)
-		if err != nil {
-			if errors.Is(err, cfdns.Done) {
-				break
-			}
-
-			t.Fatalf("Error listing DNS records from zone %s (%s): %v",
-				item.Name, item.ID, err)
-		}
-
-		t.Logf("  - %s %s %s", rec.Name, rec.Type, rec.Content)
-		totalRecords++
-	}
-
-	t.Logf("TOTAL DNS RECORDS: %v", totalRecords)
-}
-
 var testRecordNameRE = regexp.MustCompile(`^test-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2})-[a-z0-9]{8}.*`)
 
 // testRecordName creates a random name to be used when creating test
@@ -347,13 +322,6 @@ func requireNotNil(t *testing.T, v any) {
 	t.Helper()
 	if v == nil {
 		t.Fatalf("Unexpected nil value")
-	}
-}
-
-func requireNil(t *testing.T, v any) {
-	t.Helper()
-	if v != nil {
-		t.Fatalf("Expected nil, got %v", v)
 	}
 }
 

@@ -126,11 +126,3 @@ type Caller struct {
 	File string `json:"file"`
 	Line int    `json:"line"`
 }
-
-func trueFn() bool {
-	return true
-}
-
-func falseFn() bool {
-	return false
-}
