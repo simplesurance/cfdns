@@ -16,11 +16,12 @@ type request[T any] struct {
 	path        string
 	queryParams url.Values
 	headers     http.Header
-	body        T
+	body        *T
 }
 
 type response[T any] struct {
 	body    T
+	rawBody []byte
 	code    int
 	headers http.Header
 }

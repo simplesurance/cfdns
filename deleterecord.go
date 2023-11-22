@@ -16,10 +16,10 @@ func (c *Client) DeleteRecord(
 	ctx context.Context,
 	req *DeleteRecordRequest,
 ) (*DeleteRecordResponse, error) {
-	_, err := runWithRetry[*struct{}, *deleteRecordAPIResponse](
+	_, err := runWithRetry[struct{}, *deleteRecordAPIResponse](
 		ctx,
 		c.cfg.logger.SubLogger(logs.WithPrefix("DeleteDNSRecord")),
-		request[*struct{}]{
+		&request[struct{}]{
 			client: c,
 			method: "DELETE",
 			path: fmt.Sprintf("zones/%s/dns_records/%s",

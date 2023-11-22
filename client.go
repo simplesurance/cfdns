@@ -42,9 +42,9 @@ type Client struct {
 func runWithRetry[TREQ any, TRESP commonResponseSetter](
 	ctx context.Context,
 	logger *logs.Logger,
-	req request[TREQ],
+	req *request[TREQ],
 ) (
-	resp response[TRESP],
+	resp *response[TRESP],
 	_ error,
 ) {
 	reterr := retry.ExpBackoff(ctx, logger, retryFirsDelay, retryMaxDelay,
@@ -64,9 +64,9 @@ func runWithRetry[TREQ any, TRESP commonResponseSetter](
 func runOnce[TREQ any, TRESP commonResponseSetter](
 	ctx context.Context,
 	logger *logs.Logger,
-	treq request[TREQ],
+	treq *request[TREQ],
 ) (
-	tresp response[TRESP],
+	tresp *response[TRESP],
 	err error,
 ) {
 	if err = treq.client.cfg.ratelim.Wait(ctx); err != nil {
@@ -83,10 +83,13 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	theurl.RawQuery = treq.queryParams.Encode()
 
 	// request body
-	reqBody, err := json.Marshal(treq.body)
-	if err != nil {
-		err = retry.PermanentError{Cause: err}
-		return
+	var reqBody []byte
+	if treq.body != nil {
+		reqBody, err = json.Marshal(treq.body)
+		if err != nil {
+			err = retry.PermanentError{Cause: err}
+			return
+		}
 	}
 
 	// request
@@ -117,47 +120,48 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	// handle response
 	if resp.StatusCode >= 400 {
 		err = handleErrorResponse(resp, logger)
-
 		logFullRequestError(logger, treq, reqBody, err)
-
-		var httpErr HTTPError
-		if errors.As(err, &httpErr) && httpErr.IsPermanent() {
-			err = retry.PermanentError{Cause: err}
-			return
-		}
-
 		return
 	}
 
-	return handleSuccessResponse[TRESP](resp, logger)
+	tresp, err = handleSuccessResponse[TRESP](resp, logger)
+	if err != nil {
+		logFullRequestError(logger, treq, reqBody, err)
+		return
+	}
+
+	if treq.client.cfg.logSuccess {
+		logFullHTTPRequestSuccess(logger, treq, reqBody, tresp)
+	}
+
+	return tresp, err
 }
 
 func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, logger *logs.Logger) (
-	resp response[TRESP],
+	resp *response[TRESP],
 	err error,
 ) {
 	resp.code = httpResp.StatusCode
 	resp.headers = httpResp.Header
 
-	var respBody []byte
-	respBody, err = io.ReadAll(httpResp.Body)
+	resp.rawBody, err = io.ReadAll(httpResp.Body)
 	if err != nil {
 		err = errors.Join(err, HTTPError{
 			Code:    httpResp.StatusCode,
-			RawBody: respBody,
+			RawBody: resp.rawBody,
 			Headers: resp.headers,
 		})
-		return
+		return // allow retry
 	}
 
-	err = json.Unmarshal(respBody, &resp.body)
+	err = json.Unmarshal(resp.rawBody, &resp.body)
 	if err != nil {
 		err = errors.Join(err, HTTPError{
 			Code:    httpResp.StatusCode,
-			RawBody: respBody,
+			RawBody: resp.rawBody,
 			Headers: resp.headers,
 		})
-		return
+		return // allow retry
 	}
 
 	return
@@ -172,7 +176,7 @@ func handleErrorResponse(resp *http.Response, logger *logs.Logger) error {
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %v; %w", err, httpErr)
+		return fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %v; %w", err, httpErr) // allow retry
 	}
 
 	httpErr.RawBody = respBody
@@ -180,35 +184,34 @@ func handleErrorResponse(resp *http.Response, logger *logs.Logger) error {
 	// try to parse the CloudFlare error objects
 	mediaType, _, err := mime.ParseMediaType(resp.Header.Get("content-type"))
 	if err != nil {
-		return fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q (%v); %w",
-			resp.Header.Get("content-type"), err, httpErr)
+		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q (%v); %w",
+			resp.Header.Get("content-type"), err, httpErr)}
 	}
 
 	if mediaType != "application/json" {
-		return fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q\n%w",
-			resp.Header.Get("content-type"), httpErr)
+		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q\n%w",
+			resp.Header.Get("content-type"), httpErr)}
 	}
 
 	var cfcommon cfResponseCommon
 	err = json.Unmarshal(respBody, &cfcommon)
 	if err != nil {
-		return fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %v; %w", err, httpErr)
+		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %v; %w", err, httpErr)}
 	}
 
-	return CloudFlareError{
+	ret := CloudFlareError{
 		cfResponseCommon: cfcommon,
 		HTTPError:        httpErr,
 	}
-}
 
-// mergeHeaders add the values on the second parameter to the first.
-func mergeHeaders(dst, target http.Header) {
-	for k, v := range target {
-		dst[k] = v
+	if httpErr.IsPermanent() {
+		return retry.PermanentError{Cause: ret}
 	}
+
+	return ret
 }
 
-func logFullRequestError[T any](logger *logs.Logger, treq request[T], reqBody []byte, err error) {
+func logFullRequestError[T any](logger *logs.Logger, treq *request[T], reqBody []byte, err error) {
 	logger.D(func(log logs.DebugFn) {
 		// request
 		reqHeaders := make([]string, 0, len(treq.headers))
@@ -242,4 +245,41 @@ func logFullRequestError[T any](logger *logs.Logger, treq request[T], reqBody []
 			resp,
 		))
 	})
+}
+
+func logFullHTTPRequestSuccess[TREQ any, TRESP commonResponseSetter](logger *logs.Logger, treq *request[TREQ], reqBody []byte, resp *response[TRESP]) {
+	logger.D(func(log logs.DebugFn) {
+		// request
+		reqHeaders := make([]string, 0, len(treq.headers))
+		for k, v := range treq.headers {
+			reqHeaders = append(reqHeaders, k+": "+strings.Join(v, ", "))
+		}
+
+		// response
+		respHeaders := make([]string, 0, len(resp.headers))
+		for k, v := range resp.headers {
+			respHeaders = append(respHeaders, k+": "+strings.Join(v, ", "))
+		}
+
+		resp := fmt.Sprintf("RESPONSE: %d\n%s\n\n%s",
+			resp.code,
+			strings.Join(respHeaders, "\n"),
+			resp.rawBody)
+
+		// full log message
+		log(fmt.Sprintf("REQUEST\n%s %s\n%s\n\n%s\n\n%s",
+			treq.method,
+			treq.path,
+			strings.Join(reqHeaders, "\n"),
+			reqBody,
+			resp,
+		))
+	})
+}
+
+// mergeHeaders add the values on the second parameter to the first.
+func mergeHeaders(dst, target http.Header) {
+	for k, v := range target {
+		dst[k] = v
+	}
 }

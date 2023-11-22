@@ -15,6 +15,7 @@ type settings struct {
 	ratelim    *rate.Limiter
 	logger     *logs.Logger
 	httpClient *http.Client
+	logSuccess bool
 }
 
 func applyOptions(opts ...Option) *settings {
@@ -39,5 +40,16 @@ func WithRateLimiter(ratelim *rate.Limiter) Option {
 func WithLogger(logger *logs.Logger) Option {
 	return func(s *settings) {
 		s.logger = logger
+	}
+}
+
+// WithLogSuccessfulResponses allows logging full request and response
+// send to CloudFlare in case of successful response. Debug log must also
+// be enabled.
+//
+// Error responses will always be logged if debug log is enabled.
+func WithLogSuccessfulResponses(enable bool) Option {
+	return func(s *settings) {
+		s.logSuccess = enable
 	}
 }

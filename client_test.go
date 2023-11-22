@@ -237,7 +237,8 @@ func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID s
 
 	client := cfdns.NewClient(cfdns.APIToken(apitoken),
 		cfdns.WithLogger(logs.New(logtotest.ForTest(t, true),
-			logs.WithDebugEnabledFn(func() bool { return true }))))
+			logs.WithDebugEnabledFn(func() bool { return true }))),
+		cfdns.WithLogSuccessfulResponses(true))
 
 	// return the ID of the first zone
 	resp := client.ListZones(&cfdns.ListZonesRequest{})

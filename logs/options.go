@@ -3,11 +3,11 @@ package logs
 import "time"
 
 type options struct {
-	callersToSkip  int
 	Tags           map[string]any
-	Severity       Severity
 	debugEnabledFn func() bool
 	logPrefix      string
+	callersToSkip  int
+	Severity       Severity
 }
 
 func applyOptions(opts ...Option) options {
