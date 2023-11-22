@@ -2,7 +2,6 @@ package cfdns
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/simplesurance/cfdns/logs"
@@ -22,17 +21,12 @@ type apiToken struct {
 	token string
 }
 
-func (a apiToken) configure(logger *logs.Logger, req *http.Request) error {
+func (a apiToken) configure(_ *logs.Logger, req *http.Request) error {
 	if a.token == "" {
 		return errEmptyToken
 	}
 
 	req.Header.Set("authorization", "Bearer "+a.token)
-
-	// FIXME remove
-	logger.D(func(log logs.DebugFn) {
-		log(fmt.Sprintf("APIToken injected"))
-	})
 
 	return nil
 }
