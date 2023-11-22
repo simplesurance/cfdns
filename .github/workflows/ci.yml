@@ -45,8 +45,8 @@ jobs:
   golangci:
     strategy:
       matrix:
-        go: [1.19]
-        lint: [v1.50.1]
+        go: [1.21]
+        lint: [v1.55.2]
     name: lint
     runs-on: ubuntu-latest
     steps:
