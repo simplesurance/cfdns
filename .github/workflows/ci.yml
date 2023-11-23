@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        go: [1.20, 1.21]
+        go: ["1.20", "1.21"]
     name: build
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +27,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go: [1.20, 1.21]
+        go: ["1.20", "1.21"]
     name: test
     runs-on: ubuntu-latest
     steps:
@@ -45,8 +45,8 @@ jobs:
   golangci:
     strategy:
       matrix:
-        go: [1.20, 1.21]
-        lint: [v1.55.2]
+        go: ["1.20", "1.21"]
+        lint: ["v1.55.2"]
     name: lint
     runs-on: ubuntu-latest
     steps:
