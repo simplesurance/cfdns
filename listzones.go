@@ -21,13 +21,15 @@ func (c *Client) ListZones(
 		fetchNext: func(
 			ctx context.Context,
 		) ([]*ListZonesResponseItem, bool, error) {
+			page++
+
 			queryParams := url.Values{
 				"direction": {"asc"},
 				"per_page":  {strconv.Itoa(itemsPerPage)},
 			}
 
 			if page != 0 {
-				queryParams["name"] = []string{strconv.Itoa(page)}
+				queryParams["page"] = []string{strconv.Itoa(page)}
 			}
 
 			resp, err := runWithRetry[struct{}, *listZoneAPIResponse](
@@ -41,7 +43,6 @@ func (c *Client) ListZones(
 					headers:     http.Header{},
 					body:        nil,
 				})
-			page++
 
 			if err != nil {
 				return nil, false, err
