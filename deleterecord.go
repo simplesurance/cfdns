@@ -25,11 +25,11 @@ func (c *Client) DeleteRecord(
 			path: fmt.Sprintf("zones/%s/dns_records/%s",
 				url.PathEscape(req.ZoneID),
 				url.PathEscape(req.RecordID)),
-			queryParams: url.Values{
+			queryParams: url.Values{},
+			headers: http.Header{
 				"content-type": {"application/json"},
 			},
-			headers: http.Header{},
-			body:    nil,
+			body: nil,
 		})
 
 	if err != nil {
