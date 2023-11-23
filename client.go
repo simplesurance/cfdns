@@ -110,6 +110,10 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 		return // allow retry
 	}
 
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
 	// handle response
 	if resp.StatusCode >= 400 {
 		err = handleErrorResponse(resp, logger)
@@ -130,7 +134,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	return tresp, err
 }
 
-func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, logger *logs.Logger) (
+func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, _ *logs.Logger) (
 	*response[TRESP],
 	error,
 ) {
@@ -163,7 +167,7 @@ func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, 
 	return &ret, nil
 }
 
-func handleErrorResponse(resp *http.Response, logger *logs.Logger) error {
+func handleErrorResponse(resp *http.Response, _ *logs.Logger) error {
 	// the error response must always support errors.As(err, HTTPError)
 	httpErr := HTTPError{
 		Code:    resp.StatusCode,
@@ -172,7 +176,7 @@ func handleErrorResponse(resp *http.Response, logger *logs.Logger) error {
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %v; %w", err, httpErr) // allow retry
+		return fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %w; %w", err, httpErr) // allow retry
 	}
 
 	httpErr.RawBody = respBody
@@ -180,7 +184,7 @@ func handleErrorResponse(resp *http.Response, logger *logs.Logger) error {
 	// try to parse the CloudFlare error objects
 	mediaType, _, err := mime.ParseMediaType(resp.Header.Get("content-type"))
 	if err != nil {
-		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q (%v); %w",
+		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q (%w); %w",
 			resp.Header.Get("content-type"), err, httpErr)}
 	}
 
@@ -192,7 +196,7 @@ func handleErrorResponse(resp *http.Response, logger *logs.Logger) error {
 	var cfcommon cfResponseCommon
 	err = json.Unmarshal(respBody, &cfcommon)
 	if err != nil {
-		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %v; %w", err, httpErr)}
+		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %w; %w", err, httpErr)}
 	}
 
 	ret := CloudFlareError{

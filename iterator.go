@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-var Done = errors.New("done")
+var ErrDone = errors.New("done")
 
 // Iterator implements an iterator algorithm from a function that fetches
 // blocks of data. This allows having fixed-memory usage when reading
@@ -31,7 +31,7 @@ func (it *Iterator[T]) Next(ctx context.Context) (retElm T, err error) {
 	}
 
 	if len(it.elements) == 0 {
-		err = Done
+		err = ErrDone
 		return
 	}
 
@@ -47,7 +47,7 @@ func ReadAll[T any](ctx context.Context, it *Iterator[T]) ([]T, error) {
 	for {
 		item, err := it.Next(ctx)
 		if err != nil {
-			if errors.Is(err, Done) {
+			if errors.Is(err, ErrDone) {
 				break
 			}
 

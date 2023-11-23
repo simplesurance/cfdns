@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"os"
 
+	"golang.org/x/time/rate"
+
 	"github.com/simplesurance/cfdns/logs"
 	"github.com/simplesurance/cfdns/logs/textlogger"
-	"golang.org/x/time/rate"
 )
 
 type Option func(*settings)

@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/simplesurance/cfdns/logs"
 	"golang.org/x/exp/maps"
+
+	"github.com/simplesurance/cfdns/logs"
 )
 
 func New(out, err io.Writer) logs.Driver {

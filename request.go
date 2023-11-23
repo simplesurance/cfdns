@@ -63,8 +63,8 @@ type CloudFlareError struct {
 }
 
 func (ce CloudFlareError) Error() string {
-	var errs []string
-	for _, err := range ce.Errors {
+	errs := make([]string, len(ce.Errors))
+	for i, err := range ce.Errors {
 		var chain []string
 		for _, ch := range err.ErrorChain {
 			chain = append(chain, fmt.Sprintf("%d %s", ch.Code, ch.Message))
@@ -75,7 +75,7 @@ func (ce CloudFlareError) Error() string {
 			chainmsg = fmt.Sprintf(" (%s)", strings.Join(chain, "; "))
 		}
 
-		errs = append(errs, fmt.Sprintf("%d %s%s", err.Code, err.Message, chainmsg))
+		errs[i] = fmt.Sprintf("%d %s%s", err.Code, err.Message, chainmsg)
 	}
 
 	return fmt.Sprintf("CloudFlare error: %s\n\n%s", strings.Join(errs, ", "), ce.HTTPError.Error())

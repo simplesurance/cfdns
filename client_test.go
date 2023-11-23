@@ -219,7 +219,7 @@ func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID s
 	for {
 		item, err := resp.Next(ctx)
 		if err != nil {
-			if errors.Is(err, cfdns.Done) {
+			if errors.Is(err, cfdns.ErrDone) {
 				break
 			}
 
@@ -281,7 +281,7 @@ func cleanup(
 	for {
 		record, err := iter.Next(ctx)
 		if err != nil {
-			if errors.Is(err, cfdns.Done) {
+			if errors.Is(err, cfdns.ErrDone) {
 				break
 			}
 
