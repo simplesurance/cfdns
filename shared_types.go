@@ -36,8 +36,8 @@ func (rc *cfResponseCommon) IsAnyCFErrorCode(code ...int) bool {
 	return false
 }
 
-func (rc *cfResponseCommon) setCFCommonResponse(cf *cfResponseCommon) {
-	*rc = *cf
+func (rc *cfResponseCommon) setCFCommonResponse(v *cfResponseCommon) {
+	*rc = *v
 }
 
 var _ commonResponseSetter = &cfResponseCommon{}

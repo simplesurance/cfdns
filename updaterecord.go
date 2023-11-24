@@ -24,11 +24,11 @@ func (c *Client) UpdateRecord(
 	}
 
 	// PUT https://api.cloudflare.com/client/v4/zones/{zone_identifier}/dns_records/{identifier}
-	resp, err := runWithRetry[updateRecordAPIRequest, *updateRecordAPIResponse](
+	resp, err := runWithRetry[*updateRecordAPIResponse](
 		ctx,
 		c,
 		c.cfg.logger.SubLogger(logs.WithPrefix("UpdateDNSRecord")),
-		&request[updateRecordAPIRequest]{
+		&request{
 			method: "PUT",
 			path: fmt.Sprintf("zones/%s/dns_records/%s",
 				url.PathEscape(req.ZoneID),

@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	retryFirsDelay   = 2 * time.Second
+	retryFirstDelay  = 2 * time.Second
 	retryMaxDelay    = 30 * time.Second
 	retryFactor      = 2
 	retryMaxAttempts = 6
@@ -45,20 +45,20 @@ type Client struct {
 //
 // This is not a method of Client because go allows using a type parameter
 // on a method, but not declaring them.
-func runWithRetry[TREQ any, TRESP commonResponseSetter](
+func runWithRetry[TRESP commonResponseSetter](
 	ctx context.Context,
 	client *Client,
 	logger *logs.Logger,
-	req *request[TREQ],
+	req *request,
 ) (
 	*response[TRESP],
 	error,
 ) {
 	var resp *response[TRESP]
-	reterr := retry.ExpBackoff(ctx, logger, retryFirsDelay, retryMaxDelay,
+	reterr := retry.ExpBackoff(ctx, logger, retryFirstDelay, retryMaxDelay,
 		retryFactor, retryMaxAttempts, func() error {
 			var err error
-			resp, err = sendRequest[TREQ, TRESP](ctx, client, logger, req)
+			resp, err = sendRequest[TRESP](ctx, client, logger, req)
 			return err
 		})
 
@@ -69,11 +69,11 @@ func runWithRetry[TREQ any, TRESP commonResponseSetter](
 // Permanent errors are wrapped with retry.PermanentError. Any error returned
 // from the server is wrapped with HTTPError. If the error is a valid
 // CloudFlare error, it is also wrapped with CloudFlareError.
-func sendRequest[TREQ any, TRESP commonResponseSetter](
+func sendRequest[TRESP commonResponseSetter](
 	ctx context.Context,
 	client *Client,
 	logger *logs.Logger,
-	treq *request[TREQ],
+	treq *request,
 ) (
 	*response[TRESP],
 	error,
@@ -219,7 +219,7 @@ func handleErrorResponse(resp *http.Response, _ *logs.Logger) error {
 	return ret
 }
 
-func logFullRequestError[T any](logger *logs.Logger, treq *request[T], reqBody []byte, err error) {
+func logFullRequestError(logger *logs.Logger, treq *request, reqBody []byte, err error) {
 	logger.D(func(log logs.DebugFn) {
 		msg := &bytes.Buffer{}
 
@@ -251,7 +251,7 @@ func logFullRequestError[T any](logger *logs.Logger, treq *request[T], reqBody [
 	})
 }
 
-func logFullHTTPRequestSuccess[TREQ any, TRESP commonResponseSetter](logger *logs.Logger, treq *request[TREQ], reqBody []byte, resp *response[TRESP]) {
+func logFullHTTPRequestSuccess[TRESP commonResponseSetter](logger *logs.Logger, treq *request, reqBody []byte, resp *response[TRESP]) {
 	logger.D(func(log logs.DebugFn) {
 		msg := &bytes.Buffer{}
 
@@ -286,7 +286,7 @@ func mergeHeaders(dst, target http.Header) {
 	}
 }
 
-func requestURL[T any](treq *request[T]) string {
+func requestURL(treq *request) string {
 	urlstring := baseURL + "/" + treq.path
 	theurl, err := url.Parse(urlstring)
 	if err != nil {

@@ -23,11 +23,11 @@ func (c *Client) CreateRecord(
 		ttl = &intttl
 	}
 
-	resp, err := runWithRetry[createRecordAPIRequest, *createRecordAPIResponse](
+	resp, err := runWithRetry[*createRecordAPIResponse](
 		ctx,
 		c,
 		c.cfg.logger.SubLogger(logs.WithPrefix("CreateDNSRecord")),
-		&request[createRecordAPIRequest]{
+		&request{
 			method:      "POST",
 			path:        fmt.Sprintf("zones/%s/dns_records", url.PathEscape(req.ZoneID)),
 			queryParams: url.Values{},

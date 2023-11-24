@@ -7,7 +7,9 @@ import (
 	"github.com/simplesurance/cfdns/logs"
 )
 
-var errEmptyToken = errors.New("Provided token is empty")
+// ErrEmptyToken is returned when the credentials generator produces an empty
+// authentication token.
+var ErrEmptyToken = errors.New("Provided token is empty")
 
 type Credentials interface {
 	configure(*logs.Logger, *http.Request) error
@@ -23,7 +25,7 @@ type apiToken struct {
 
 func (a apiToken) configure(_ *logs.Logger, req *http.Request) error {
 	if a.token == "" {
-		return errEmptyToken
+		return ErrEmptyToken
 	}
 
 	req.Header.Set("authorization", "Bearer "+a.token)

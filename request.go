@@ -10,12 +10,12 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-type request[T any] struct {
+type request struct {
 	method      string
 	path        string
 	queryParams url.Values
 	headers     http.Header
-	body        *T
+	body        any // the encoding/json package will be used to marshal it
 }
 
 type response[T any] struct {
