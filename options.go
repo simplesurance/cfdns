@@ -44,6 +44,12 @@ func WithLogger(logger *logs.Logger) Option {
 	}
 }
 
+func WithHTTPClient(c *http.Client) Option {
+	return func(s *settings) {
+		s.httpClient = c
+	}
+}
+
 // WithLogSuccessfulResponses allows logging full request and response
 // send to CloudFlare in case of successful response. Debug log must also
 // be enabled.

@@ -3,8 +3,6 @@ package cfdns
 import (
 	"errors"
 	"net/http"
-
-	"github.com/simplesurance/cfdns/logs"
 )
 
 // ErrEmptyToken is returned when the credentials generator produces an empty
@@ -12,25 +10,23 @@ import (
 var ErrEmptyToken = errors.New("Provided token is empty")
 
 type Credentials interface {
-	configure(*logs.Logger, *http.Request) error
+	configure(*http.Request)
 }
 
-func APIToken(token string) Credentials {
-	return apiToken{token: token}
+func APIToken(token string) (Credentials, error) {
+	if token == "" {
+		return nil, ErrEmptyToken
+	}
+
+	return apiToken{token: token}, nil
 }
 
 type apiToken struct {
 	token string
 }
 
-func (a apiToken) configure(_ *logs.Logger, req *http.Request) error {
-	if a.token == "" {
-		return ErrEmptyToken
-	}
-
+func (a apiToken) configure(req *http.Request) {
 	req.Header.Set("authorization", "Bearer "+a.token)
-
-	return nil
 }
 
 var _ Credentials = apiToken{}

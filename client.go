@@ -103,12 +103,7 @@ func sendRequest[TRESP commonResponseSetter](
 	mergeHeaders(req.Header, treq.headers)
 
 	// credentials
-	err = client.creds.configure(
-		logger.SubLogger(logs.WithPrefix("Authorization")),
-		req)
-	if err != nil {
-		return nil, err // allow retry
-	}
+	client.creds.configure(req)
 
 	// send the request
 	resp, err := client.cfg.httpClient.Do(req)

@@ -209,7 +209,12 @@ func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID s
 		t.Fatalf("%v environment variable must be set with a CloudFlare API Token", envToken)
 	}
 
-	client := cfdns.NewClient(cfdns.APIToken(apitoken),
+	creds, err := cfdns.APIToken(apitoken)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := cfdns.NewClient(creds,
 		cfdns.WithLogger(logs.New(logtotest.ForTest(t, true),
 			logs.WithDebugEnabledFn(func() bool { return true }))),
 		cfdns.WithLogSuccessfulResponses(true))
