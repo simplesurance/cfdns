@@ -14,10 +14,10 @@ import (
 // API Reference: https://developers.cloudflare.com/api/operations/zones-get
 func (c *Client) ListZones(
 	_ *ListZonesRequest,
-) *Iterator[*ListZonesResponseItem] {
+) *Iterator[ListZonesResponseItem] {
 	page := 0
 
-	return &Iterator[*ListZonesResponseItem]{
+	return &Iterator[ListZonesResponseItem]{
 		fetchNext: func(
 			ctx context.Context,
 		) ([]*ListZonesResponseItem, bool, error) {

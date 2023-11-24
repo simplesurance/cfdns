@@ -16,10 +16,10 @@ import (
 // API Reference: https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-list-dns-records
 func (c *Client) ListRecords(
 	req *ListRecordsRequest,
-) *Iterator[*ListRecordsResponseItem] {
+) *Iterator[ListRecordsResponseItem] {
 	page := 0
 
-	return &Iterator[*ListRecordsResponseItem]{
+	return &Iterator[ListRecordsResponseItem]{
 		fetchNext: func(
 			ctx context.Context,
 		) ([]*ListRecordsResponseItem, bool, error) {

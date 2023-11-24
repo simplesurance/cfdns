@@ -44,9 +44,10 @@ func runWithRetry[TREQ any, TRESP commonResponseSetter](
 	logger *logs.Logger,
 	req *request[TREQ],
 ) (
-	resp *response[TRESP],
-	_ error,
+	*response[TRESP],
+	error,
 ) {
+	var resp *response[TRESP]
 	reterr := retry.ExpBackoff(ctx, logger, retryFirsDelay, retryMaxDelay,
 		retryFactor, retryMaxAttempts, func() error {
 			var err error
@@ -66,11 +67,12 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	logger *logs.Logger,
 	treq *request[TREQ],
 ) (
-	tresp *response[TRESP],
-	err error,
+	*response[TRESP],
+	error,
 ) {
-	if err = treq.client.cfg.ratelim.Wait(ctx); err != nil {
-		return
+	err := treq.client.cfg.ratelim.Wait(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	// request body
@@ -78,8 +80,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	if treq.body != nil {
 		reqBody, err = json.Marshal(treq.body)
 		if err != nil {
-			err = retry.PermanentError{Cause: err}
-			return
+			return nil, retry.PermanentError{Cause: err}
 		}
 	}
 
@@ -87,8 +88,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	req, err := http.NewRequestWithContext(ctx, treq.method, requestURL(treq),
 		bytes.NewReader(reqBody))
 	if err != nil {
-		err = retry.PermanentError{Cause: err}
-		return
+		return nil, retry.PermanentError{Cause: err}
 	}
 
 	// headers
@@ -99,7 +99,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 		logger.SubLogger(logs.WithPrefix("Authorization")),
 		req)
 	if err != nil {
-		return // allow retry
+		return nil, err // allow retry
 	}
 
 	// send the request
@@ -107,7 +107,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	if err != nil {
 		// errors from Do() may be permanent or not, it is not possible to
 		// determine precisely
-		return // allow retry
+		return nil, err // allow retry
 	}
 
 	defer func() {
@@ -118,13 +118,13 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	if resp.StatusCode >= 400 {
 		err = handleErrorResponse(resp, logger)
 		logFullRequestError(logger, treq, reqBody, err)
-		return
+		return nil, err
 	}
 
-	tresp, err = handleSuccessResponse[TRESP](resp, logger)
+	tresp, err := handleSuccessResponse[TRESP](resp, logger)
 	if err != nil {
 		logFullRequestError(logger, treq, reqBody, err)
-		return
+		return nil, err
 	}
 
 	if treq.client.cfg.logSuccess {
