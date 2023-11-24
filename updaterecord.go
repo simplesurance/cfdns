@@ -27,7 +27,7 @@ func (c *Client) UpdateRecord(
 	resp, err := runWithRetry[*updateRecordAPIResponse](
 		ctx,
 		c,
-		c.cfg.logger.SubLogger(logs.WithPrefix("UpdateDNSRecord")),
+		c.logger.SubLogger(logs.WithPrefix("UpdateDNSRecord")),
 		&request{
 			method: "PUT",
 			path: fmt.Sprintf("zones/%s/dns_records/%s",
@@ -52,7 +52,7 @@ func (c *Client) UpdateRecord(
 		return nil, err
 	}
 
-	c.cfg.logger.D(func(log logs.DebugFn) {
+	c.logger.D(func(log logs.DebugFn) {
 		log(fmt.Sprintf("Record %s (%s %s %s) updated",
 			req.RecordID, req.Name, req.Type, req.Content))
 	})

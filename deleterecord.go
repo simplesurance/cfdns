@@ -19,7 +19,7 @@ func (c *Client) DeleteRecord(
 	_, err := runWithRetry[*deleteRecordAPIResponse](
 		ctx,
 		c,
-		c.cfg.logger.SubLogger(logs.WithPrefix("DeleteDNSRecord")),
+		c.logger.SubLogger(logs.WithPrefix("DeleteDNSRecord")),
 		&request{
 			method: "DELETE",
 			path: fmt.Sprintf("zones/%s/dns_records/%s",
@@ -36,7 +36,7 @@ func (c *Client) DeleteRecord(
 		return nil, err
 	}
 
-	c.cfg.logger.D(func(log logs.DebugFn) {
+	c.logger.D(func(log logs.DebugFn) {
 		log(fmt.Sprintf("Record %s deleted", req.RecordID))
 	})
 	return &DeleteRecordResponse{}, err

@@ -27,15 +27,15 @@ const (
 
 func NewClient(creds Credentials, options ...Option) *Client {
 	ret := Client{
-		cfg:   applyOptions(options...),
-		creds: creds,
+		settings: applyOptions(options...),
+		creds:    creds,
 	}
 
 	return &ret
 }
 
 type Client struct {
-	cfg   *settings
+	*settings
 	creds Credentials
 }
 
@@ -78,7 +78,7 @@ func sendRequest[TRESP commonResponseSetter](
 	*response[TRESP],
 	error,
 ) {
-	err := client.cfg.ratelim.Wait(ctx)
+	err := client.ratelim.Wait(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func sendRequest[TRESP commonResponseSetter](
 	client.creds.configure(req)
 
 	// send the request
-	resp, err := client.cfg.httpClient.Do(req)
+	resp, err := client.httpClient.Do(req)
 	if err != nil {
 		// errors from Do() may be permanent or not, it is not possible to
 		// determine precisely
@@ -130,7 +130,7 @@ func sendRequest[TRESP commonResponseSetter](
 		return nil, err
 	}
 
-	if client.cfg.logSuccess {
+	if client.logSuccess {
 		logFullHTTPRequestSuccess(logger, treq, reqBody, tresp)
 	}
 

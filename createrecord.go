@@ -26,7 +26,7 @@ func (c *Client) CreateRecord(
 	resp, err := runWithRetry[*createRecordAPIResponse](
 		ctx,
 		c,
-		c.cfg.logger.SubLogger(logs.WithPrefix("CreateDNSRecord")),
+		c.logger.SubLogger(logs.WithPrefix("CreateDNSRecord")),
 		&request{
 			method:      "POST",
 			path:        fmt.Sprintf("zones/%s/dns_records", url.PathEscape(req.ZoneID)),
@@ -49,7 +49,7 @@ func (c *Client) CreateRecord(
 		return nil, err
 	}
 
-	c.cfg.logger.D(func(log logs.DebugFn) {
+	c.logger.D(func(log logs.DebugFn) {
 		log(fmt.Sprintf("Record %s %s %s created with ID=%s",
 			req.Name, req.Type, req.Content, resp.body.Result.ID))
 	})
