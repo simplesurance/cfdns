@@ -221,19 +221,19 @@ func handleErrorResponse(resp *http.Response, _ *logs.Logger) error {
 	// try to parse the CloudFlare error objects
 	mediaType, _, err := mime.ParseMediaType(resp.Header.Get("content-type"))
 	if err != nil {
-		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q (%w); %w",
+		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, and the content-type of the response is invalid %q (%w): %w",
 			resp.Header.Get("content-type"), err, httpErr)}
 	}
 
 	if mediaType != "application/json" {
-		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, and the content-type of the response is unsupported %q\n%w",
+		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, and the content-type of the response is invalid %q: %w",
 			resp.Header.Get("content-type"), httpErr)}
 	}
 
 	var cfcommon cfResponseCommon
 	err = json.Unmarshal(respBody, &cfcommon)
 	if err != nil {
-		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %w; %w", err, httpErr)}
+		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, unmarshalling the error body as json failed: %w; %w", err, httpErr)}
 	}
 
 	ret := CloudFlareError{
