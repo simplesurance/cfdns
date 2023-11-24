@@ -3,6 +3,7 @@ package cfdns
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"golang.org/x/time/rate"
 
@@ -13,17 +14,19 @@ import (
 type Option func(*settings)
 
 type settings struct {
-	ratelim    *rate.Limiter
-	logger     *logs.Logger
-	httpClient *http.Client
-	logSuccess bool
+	ratelim        *rate.Limiter
+	logger         *logs.Logger
+	httpClient     *http.Client
+	logSuccess     bool
+	requestTimeout time.Duration
 }
 
 func applyOptions(opts ...Option) *settings {
 	ret := settings{
-		ratelim:    rate.NewLimiter(rate.Every(defaultRequestInterval), 1),
-		logger:     logs.New(textlogger.New(os.Stdout, os.Stderr)),
-		httpClient: http.DefaultClient,
+		ratelim:        rate.NewLimiter(rate.Every(defaultRequestInterval), 1),
+		logger:         logs.New(textlogger.New(os.Stdout, os.Stderr)),
+		httpClient:     http.DefaultClient,
+		requestTimeout: 30 * time.Second,
 	}
 	for _, opt := range opts {
 		opt(&ret)
@@ -47,6 +50,16 @@ func WithLogger(logger *logs.Logger) Option {
 func WithHTTPClient(c *http.Client) Option {
 	return func(s *settings) {
 		s.httpClient = c
+	}
+}
+
+// WithRequestTimeout configures how long to wait for an HTTP request.
+// The default is 1 minute. Setting a value of 0 will make it use the
+// default behavior of the HTTP client being used, that might be
+// waiting forever.
+func WithRequestTimeout(timeout time.Duration) Option {
+	return func(s *settings) {
+		s.requestTimeout = timeout
 	}
 }
 

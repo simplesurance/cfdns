@@ -92,8 +92,16 @@ func sendRequest[TRESP commonResponseSetter](
 		}
 	}
 
-	// request
-	req, err := http.NewRequestWithContext(ctx, treq.method, requestURL(treq),
+	// request timeout
+	reqCtx := ctx
+	if client.requestTimeout > 0 {
+		var reqCtxCancel func()
+		reqCtx, reqCtxCancel = context.WithTimeout(reqCtx, client.requestTimeout)
+		defer reqCtxCancel()
+	}
+
+	// send the request
+	req, err := http.NewRequestWithContext(reqCtx, treq.method, requestURL(treq),
 		bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, retry.PermanentError{Cause: err}
@@ -108,6 +116,10 @@ func sendRequest[TRESP commonResponseSetter](
 	// send the request
 	resp, err := client.httpClient.Do(req)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, retry.PermanentError{Cause: err}
+		}
+
 		// errors from Do() may be permanent or not, it is not possible to
 		// determine precisely
 		return nil, err // allow retry
