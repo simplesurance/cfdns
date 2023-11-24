@@ -18,12 +18,17 @@ import (
 )
 
 const (
-	retryFirstDelay  = 2 * time.Second
-	retryMaxDelay    = 30 * time.Second
-	retryFactor      = 2
-	retryMaxAttempts = 6
-	itemsPerPage     = 500
+	retryFirstDelay   = 2 * time.Second
+	retryMaxDelay     = 30 * time.Second
+	retryFactor       = 2
+	retryMaxAttempts  = 6
+	itemsPerPage      = 500
+	maxResponseLength = 1024 * 1024
 )
+
+var errResponseTooLarge = retry.PermanentError{
+	Cause: errors.New("Response from CloudFlare is too large"),
+}
 
 func NewClient(creds Credentials, options ...Option) *Client {
 	ret := Client{
@@ -149,7 +154,7 @@ func sendRequest[TRESP commonResponseSetter](
 	return tresp, err
 }
 
-func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, _ *logs.Logger) (
+func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, logger *logs.Logger) (
 	*response[TRESP],
 	error,
 ) {
@@ -159,9 +164,9 @@ func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, 
 	ret.headers = httpResp.Header
 
 	var err error
-	ret.rawBody, err = io.ReadAll(httpResp.Body)
+	ret.rawBody, err = readResponseBody(httpResp.Body)
 	if err != nil {
-		// allow retry
+		// error response already specifies is can retry or not
 		return nil, errors.Join(err, HTTPError{
 			Code:    httpResp.StatusCode,
 			RawBody: ret.rawBody,
@@ -169,9 +174,20 @@ func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, 
 		})
 	}
 
+	if len(ret.rawBody) == maxResponseLength {
+		logger.W(fmt.Sprintf(""))
+		return nil, retry.PermanentError{
+			Cause: errors.Join(err, HTTPError{
+				Code:    httpResp.StatusCode,
+				RawBody: ret.rawBody,
+				Headers: ret.headers,
+			}),
+		}
+	}
+
 	err = json.Unmarshal(ret.rawBody, &ret.body)
 	if err != nil {
-		// allow retry
+		// error response already specifies is can retry or not
 		return nil, errors.Join(err, HTTPError{
 			Code:    httpResp.StatusCode,
 			RawBody: ret.rawBody,
@@ -189,9 +205,15 @@ func handleErrorResponse(resp *http.Response, _ *logs.Logger) error {
 		Headers: resp.Header,
 	}
 
-	respBody, err := io.ReadAll(resp.Body)
+	respBody, err := readResponseBody(resp.Body)
 	if err != nil {
-		return fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %w; %w", err, httpErr) // allow retry
+		err := fmt.Errorf("CloudFlare returned an error, but failed to read the error body: %w; %w", err, httpErr)
+
+		if errors.Is(err, errResponseTooLarge) {
+			return retry.PermanentError{Cause: err}
+		}
+
+		return err
 	}
 
 	httpErr.RawBody = respBody
@@ -305,4 +327,17 @@ func requestURL(treq *request) string {
 	theurl.RawQuery = treq.queryParams.Encode()
 
 	return theurl.String()
+}
+
+func readResponseBody(body io.Reader) ([]byte, error) {
+	ret, err := io.ReadAll(io.LimitReader(body, maxResponseLength+1))
+	if err != nil {
+		return nil, err // allow retry
+	}
+
+	if len(ret) > maxResponseLength {
+		return nil, errResponseTooLarge // permanent error
+	}
+
+	return ret, nil
 }
