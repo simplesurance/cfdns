@@ -9,21 +9,6 @@ on:
       - "*"
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        go: ["1.21"]
-    name: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go }}
-          cache: true
-      - name: build
-        run: "go build ./..."
-
   test:
     strategy:
       matrix:
@@ -40,7 +25,7 @@ jobs:
         env:
           TEST_CF_ZONE_NAME: "${{ vars.TEST_CF_ZONE_NAME }}"
           TEST_CF_APITOKEN: "${{ secrets.TEST_CF_APITOKEN }}"
-        run: go test ./...
+        run: go test --race ./...
 
   golangci:
     strategy:
