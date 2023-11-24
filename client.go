@@ -176,7 +176,7 @@ func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, 
 	}
 
 	if len(ret.rawBody) == maxResponseLength {
-		logger.W(fmt.Sprintf(""))
+		logger.W(fmt.Sprintf("Response from CloudFlare rejected because is bigger than %d", maxResponseLength))
 		return nil, retry.PermanentError{
 			Cause: errors.Join(err, HTTPError{
 				Code:    httpResp.StatusCode,
