@@ -39,8 +39,15 @@ type Client struct {
 	creds Credentials
 }
 
+// runWithRetry tries sending the request until it succeeds, fail to
+// many times of fails once with a permanent error. Wait between retries
+// use exponential backoff.
+//
+// This is not a method of Client because go allows using a type parameter
+// on a method, but not declaring them.
 func runWithRetry[TREQ any, TRESP commonResponseSetter](
 	ctx context.Context,
+	client *Client,
 	logger *logs.Logger,
 	req *request[TREQ],
 ) (
@@ -51,26 +58,27 @@ func runWithRetry[TREQ any, TRESP commonResponseSetter](
 	reterr := retry.ExpBackoff(ctx, logger, retryFirsDelay, retryMaxDelay,
 		retryFactor, retryMaxAttempts, func() error {
 			var err error
-			resp, err = runOnce[TREQ, TRESP](ctx, logger, req)
+			resp, err = sendRequest[TREQ, TRESP](ctx, client, logger, req)
 			return err
 		})
 
 	return resp, reterr
 }
 
-// runOnce sends an HTTP request, parses and returns the response.
+// sendRequest sends an HTTP request, parses and returns the response.
 // Permanent errors are wrapped with retry.PermanentError. Any error returned
 // from the server is wrapped with HTTPError. If the error is a valid
 // CloudFlare error, it is also wrapped with CloudFlareError.
-func runOnce[TREQ any, TRESP commonResponseSetter](
+func sendRequest[TREQ any, TRESP commonResponseSetter](
 	ctx context.Context,
+	client *Client,
 	logger *logs.Logger,
 	treq *request[TREQ],
 ) (
 	*response[TRESP],
 	error,
 ) {
-	err := treq.client.cfg.ratelim.Wait(ctx)
+	err := client.cfg.ratelim.Wait(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +103,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	mergeHeaders(req.Header, treq.headers)
 
 	// credentials
-	err = treq.client.creds.configure(
+	err = client.creds.configure(
 		logger.SubLogger(logs.WithPrefix("Authorization")),
 		req)
 	if err != nil {
@@ -103,7 +111,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 	}
 
 	// send the request
-	resp, err := treq.client.cfg.httpClient.Do(req)
+	resp, err := client.cfg.httpClient.Do(req)
 	if err != nil {
 		// errors from Do() may be permanent or not, it is not possible to
 		// determine precisely
@@ -127,7 +135,7 @@ func runOnce[TREQ any, TRESP commonResponseSetter](
 		return nil, err
 	}
 
-	if treq.client.cfg.logSuccess {
+	if client.cfg.logSuccess {
 		logFullHTTPRequestSuccess(logger, treq, reqBody, tresp)
 	}
 

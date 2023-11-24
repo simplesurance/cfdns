@@ -11,7 +11,6 @@ import (
 )
 
 type request[T any] struct {
-	client      *Client
 	method      string
 	path        string
 	queryParams url.Values

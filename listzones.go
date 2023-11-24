@@ -34,9 +34,9 @@ func (c *Client) ListZones(
 
 			resp, err := runWithRetry[struct{}, *listZoneAPIResponse](
 				ctx,
+				c,
 				c.cfg.logger.SubLogger(logs.WithPrefix("ListZones"), logs.WithInt("page", page)),
 				&request[struct{}]{
-					client:      c,
 					method:      "GET",
 					path:        "zones",
 					queryParams: queryParams,
