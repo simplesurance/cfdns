@@ -9,6 +9,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -137,18 +138,18 @@ func sendRequest[TRESP commonResponseSetter](
 	// handle response
 	if resp.StatusCode >= 400 {
 		err = handleErrorResponse(resp, logger)
-		logFullRequestError(logger, treq, reqBody, err)
+		logFullRequestError(logger, req, reqBody, err)
 		return nil, err
 	}
 
 	tresp, err := handleSuccessResponse[TRESP](resp, logger)
 	if err != nil {
-		logFullRequestError(logger, treq, reqBody, err)
+		logFullRequestError(logger, req, reqBody, err)
 		return nil, err
 	}
 
 	if client.logSuccess {
-		logFullHTTPRequestSuccess(logger, treq, reqBody, tresp)
+		logFullHTTPRequestSuccess(logger, req, reqBody, tresp)
 	}
 
 	return tresp, err
@@ -248,20 +249,16 @@ func handleErrorResponse(resp *http.Response, _ *logs.Logger) error {
 	return ret
 }
 
-func logFullRequestError(logger *logs.Logger, treq *request, reqBody []byte, err error) {
+func logFullRequestError(logger *logs.Logger, req *http.Request, reqBody []byte, err error) {
 	logger.D(func(log logs.DebugFn) {
 		msg := &bytes.Buffer{}
 
 		// request
+
 		fmt.Fprintln(msg, "REQUEST:")
-		fmt.Fprintf(msg, "%s %s\n", treq.method, requestURL(treq))
-		for k, v := range treq.headers {
-			fmt.Fprintf(msg, "%s: %s\n", k, strings.Join(v, ", "))
-		}
-		fmt.Fprintln(msg)
-		if treq.body != nil {
-			fmt.Fprintf(msg, "%s\n\n", reqBody)
-		}
+		req.Body = io.NopCloser(bytes.NewReader(reqBody))
+		reqDump, _ := httputil.DumpRequestOut(req, true)
+		fmt.Fprintf(msg, "%s\n\n", reqDump)
 
 		var httpErr HTTPError
 		if errors.As(err, &httpErr) {
@@ -280,20 +277,15 @@ func logFullRequestError(logger *logs.Logger, treq *request, reqBody []byte, err
 	})
 }
 
-func logFullHTTPRequestSuccess[TRESP commonResponseSetter](logger *logs.Logger, treq *request, reqBody []byte, resp *response[TRESP]) {
+func logFullHTTPRequestSuccess[TRESP commonResponseSetter](logger *logs.Logger, req *http.Request, reqBody []byte, resp *response[TRESP]) {
 	logger.D(func(log logs.DebugFn) {
 		msg := &bytes.Buffer{}
 
 		// request
 		fmt.Fprintln(msg, "REQUEST:")
-		fmt.Fprintf(msg, "%s %s\n", treq.method, requestURL(treq))
-		for k, v := range treq.headers {
-			fmt.Fprintf(msg, "%s: %s\n", k, strings.Join(v, ", "))
-		}
-		fmt.Fprintln(msg)
-		if treq.body != nil {
-			fmt.Fprintf(msg, "%s\n\n", reqBody)
-		}
+		req.Body = io.NopCloser(bytes.NewReader(reqBody))
+		reqDump, _ := httputil.DumpRequestOut(req, true)
+		fmt.Fprintf(msg, "%s\n\n", reqDump)
 
 		// response
 		fmt.Fprintf(msg, "RESPONSE: %d\n", resp.code)
