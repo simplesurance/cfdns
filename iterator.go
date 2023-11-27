@@ -12,12 +12,12 @@ var ErrDone = errors.New("done")
 // arbitrary-sized structs without leaking implementation details about
 // how to paginate consecutive blocks of data.
 type Iterator[T any] struct {
-	fetchNext FetchFn[T]
+	fetchNext fetchFn[T]
 	elements  []*T
 	isLast    bool
 }
 
-type FetchFn[T any] func(ctx context.Context) (batch []*T, last bool, _ error)
+type fetchFn[T any] func(ctx context.Context) (batch []*T, last bool, _ error)
 
 func (it *Iterator[T]) Next(ctx context.Context) (retElm *T, err error) {
 	if len(it.elements) == 0 && !it.isLast {
