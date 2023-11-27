@@ -31,9 +31,7 @@ func (c *Client) CreateRecord(
 			method:      http.MethodPost,
 			path:        fmt.Sprintf("zones/%s/dns_records", url.PathEscape(req.ZoneID)),
 			queryParams: url.Values{},
-			headers: http.Header{
-				"content-type": {"application/json"},
-			},
+			headers:     http.Header{},
 			body: &createRecordAPIRequest{
 				Name:    req.Name,
 				Type:    req.Type,

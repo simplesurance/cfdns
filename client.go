@@ -106,7 +106,7 @@ func sendRequest[TRESP commonResponseSetter](
 		defer reqCtxCancel()
 	}
 
-	// send the request
+	// create an http request
 	req, err := http.NewRequestWithContext(reqCtx, treq.method, requestURL(treq),
 		bytes.NewReader(reqBody))
 	if err != nil {
@@ -115,6 +115,9 @@ func sendRequest[TRESP commonResponseSetter](
 
 	// headers
 	mergeHeaders(req.Header, treq.headers)
+	mergeHeaders(req.Header, http.Header{
+		"Content-Type": {"application/json"},
+	})
 
 	// credentials
 	client.creds.configure(req)
