@@ -17,10 +17,9 @@ func (c *Client) CreateRecord(
 	ctx context.Context,
 	req *CreateRecordRequest,
 ) (*CreateRecordResponse, error) {
-	var ttl *int
-	if req.TTL != nil {
-		intttl := int(req.TTL.Seconds())
-		ttl = &intttl
+	var ttl int
+	if req.TTL == 0 {
+		ttl = 1 // Value of "1" means "automatic" (see CF documentation)
 	}
 
 	resp, err := runWithRetry[*createRecordAPIResponse](
@@ -62,10 +61,10 @@ type CreateRecordRequest struct {
 	Name    string
 	Type    string
 	Content string
-	Proxied *bool
-	Tags    *[]string
-	Comment *string
-	TTL     *time.Duration
+	Proxied bool
+	Tags    []string
+	Comment string
+	TTL     time.Duration
 }
 
 type CreateRecordResponse struct {
@@ -74,13 +73,13 @@ type CreateRecordResponse struct {
 }
 
 type createRecordAPIRequest struct {
-	Name    string    `json:"name"`
-	Type    string    `json:"type"`
-	Content string    `json:"content"`
-	TTL     *int      `json:"ttl,omitempty"`
-	Proxied *bool     `json:"proxied,omitempty"`
-	Tags    *[]string `json:"tags,omitempty"`
-	Comment *string   `json:"comment,omitempty"`
+	Name    string   `json:"name"`
+	Type    string   `json:"type"`
+	Content string   `json:"content"`
+	TTL     int      `json:"ttl,omitempty"`
+	Proxied bool     `json:"proxied,omitempty"`
+	Tags    []string `json:"tags,omitempty"`
+	Comment string   `json:"comment,omitempty"`
 }
 
 type createRecordAPIResponse struct {

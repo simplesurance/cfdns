@@ -39,7 +39,7 @@ func TestCreateCNAME(t *testing.T) {
 		Name:    recName,
 		Type:    cname,
 		Content: "github.com",
-		Comment: &comment,
+		Comment: comment,
 	})
 	if err != nil {
 		t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
@@ -88,9 +88,9 @@ func TestUpdate(t *testing.T) {
 		Name:    recName,
 		Type:    cname,
 		Content: "1.github.com",
-		Comment: &originalComment,
-		Proxied: boolPtr(true),
-		TTL:     durationPtr(time.Hour),
+		Comment: originalComment,
+		Proxied: true,
+		TTL:     time.Hour,
 	})
 	if err != nil {
 		t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
@@ -171,7 +171,7 @@ func TestConflict(t *testing.T) {
 				Name:    recName,
 				Type:    tc.typ,
 				Content: tc.content,
-				Comment: &comment,
+				Comment: comment,
 			})
 			if err != nil {
 				t.Fatalf("Error creating DNS record on CloudFlare: %v", err)
@@ -185,7 +185,7 @@ func TestConflict(t *testing.T) {
 				Name:    recName,
 				Type:    tc.typ,
 				Content: tc.content,
-				Comment: &comment,
+				Comment: comment,
 			})
 
 			var cferr cfdns.CloudFlareError
