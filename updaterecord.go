@@ -29,7 +29,7 @@ func (c *Client) UpdateRecord(
 		c,
 		c.logger.SubLogger(logs.WithPrefix("UpdateDNSRecord")),
 		&request{
-			method: "PUT",
+			method: http.MethodPut,
 			path: fmt.Sprintf("zones/%s/dns_records/%s",
 				url.PathEscape(req.ZoneID),
 				url.PathEscape(req.RecordID)),

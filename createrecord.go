@@ -28,7 +28,7 @@ func (c *Client) CreateRecord(
 		c,
 		c.logger.SubLogger(logs.WithPrefix("CreateDNSRecord")),
 		&request{
-			method:      "POST",
+			method:      http.MethodPost,
 			path:        fmt.Sprintf("zones/%s/dns_records", url.PathEscape(req.ZoneID)),
 			queryParams: url.Values{},
 			headers: http.Header{

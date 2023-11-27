@@ -37,7 +37,7 @@ func (c *Client) ListZones(
 				c,
 				c.logger.SubLogger(logs.WithPrefix("ListZones"), logs.WithInt("page", page)),
 				&request{
-					method:      "GET",
+					method:      http.MethodGet,
 					path:        "zones",
 					queryParams: queryParams,
 					headers:     http.Header{},

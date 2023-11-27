@@ -45,7 +45,7 @@ func (c *Client) ListRecords(
 				c,
 				c.logger.SubLogger(logs.WithPrefix("ListRecords"), logs.WithInt("page", page)),
 				&request{
-					method:      "GET",
+					method:      http.MethodGet,
 					path:        fmt.Sprintf("zones/%s/dns_records", url.PathEscape(req.ZoneID)),
 					queryParams: queryParams,
 					headers: http.Header{

@@ -21,7 +21,7 @@ func (c *Client) DeleteRecord(
 		c,
 		c.logger.SubLogger(logs.WithPrefix("DeleteDNSRecord")),
 		&request{
-			method: "DELETE",
+			method: http.MethodDelete,
 			path: fmt.Sprintf("zones/%s/dns_records/%s",
 				url.PathEscape(req.ZoneID),
 				url.PathEscape(req.RecordID)),
