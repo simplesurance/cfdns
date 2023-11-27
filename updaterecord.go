@@ -17,10 +17,9 @@ func (c *Client) UpdateRecord(
 	ctx context.Context,
 	req *UpdateRecordRequest,
 ) (*UpdateRecordResponse, error) {
-	var ttl *int
-	if req.TTL != nil {
-		intttl := int(req.TTL.Seconds())
-		ttl = &intttl
+	var ttl int = 1 // on CF "1" means "automatic"
+	if req.TTL != 0 {
+		ttl = int(req.TTL.Seconds())
 	}
 
 	// PUT https://api.cloudflare.com/client/v4/zones/{zone_identifier}/dns_records/{identifier}
@@ -65,10 +64,10 @@ type UpdateRecordRequest struct {
 	Name     string
 	Type     string
 	Content  string
-	Proxied  *bool
-	Tags     *[]string
-	Comment  *string
-	TTL      *time.Duration
+	Proxied  bool
+	Tags     []string
+	Comment  string
+	TTL      time.Duration
 }
 
 type UpdateRecordResponse struct {
@@ -76,13 +75,13 @@ type UpdateRecordResponse struct {
 }
 
 type updateRecordAPIRequest struct {
-	Name    string    `json:"name"`
-	Type    string    `json:"type"`
-	Content string    `json:"content"`
-	TTL     *int      `json:"ttl,omitempty"`
-	Proxied *bool     `json:"proxied,omitempty"`
-	Tags    *[]string `json:"tags,omitempty"`
-	Comment *string   `json:"comment,omitempty"`
+	Name    string   `json:"name"`
+	Type    string   `json:"type"`
+	Content string   `json:"content"`
+	TTL     int      `json:"ttl,omitempty"`
+	Proxied bool     `json:"proxied,omitempty"`
+	Tags    []string `json:"tags,omitempty"`
+	Comment string   `json:"comment,omitempty"`
 }
 
 type updateRecordAPIResponse struct {

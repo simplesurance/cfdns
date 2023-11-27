@@ -120,6 +120,7 @@ func sendRequest[TRESP commonResponseSetter](
 	})
 
 	// credentials
+	reqNoAuth := req.Clone(ctx)
 	client.creds.configure(req)
 
 	// send the request
@@ -141,18 +142,18 @@ func sendRequest[TRESP commonResponseSetter](
 	// handle response
 	if resp.StatusCode >= 400 {
 		err = handleErrorResponse(resp, logger)
-		logFullRequestError(logger, req, reqBody, err)
+		logFullRequestError(logger, reqNoAuth, reqBody, err)
 		return nil, err
 	}
 
 	tresp, err := handleSuccessResponse[TRESP](resp, logger)
 	if err != nil {
-		logFullRequestError(logger, req, reqBody, err)
+		logFullRequestError(logger, reqNoAuth, reqBody, err)
 		return nil, err
 	}
 
 	if client.logSuccess {
-		logFullHTTPRequestSuccess(logger, req, reqBody, tresp)
+		logFullHTTPRequestSuccess(logger, reqNoAuth, reqBody, tresp)
 	}
 
 	return tresp, err

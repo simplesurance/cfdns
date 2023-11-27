@@ -32,12 +32,12 @@ func (c *Client) ListRecords(
 				"order":     {"type"},
 			}
 
-			if req.Name != nil {
-				queryParams.Set("name", *req.Name)
+			if req.Name != "" {
+				queryParams.Set("name", req.Name)
 			}
 
-			if req.Type != nil {
-				queryParams.Set("type", *req.Type)
+			if req.Type != "" {
+				queryParams.Set("type", req.Type)
 			}
 
 			resp, err := runWithRetry[*listRecordsAPIResponse](
@@ -64,15 +64,11 @@ func (c *Client) ListRecords(
 					Type:    v.Type,
 					Content: v.Content,
 					Proxied: v.Proxied,
+					Comment: v.Comment,
 				}
 
-				if v.TTL != nil {
-					duration := time.Second * time.Duration(*v.TTL)
-					items[i].TTL = &duration
-				}
-
-				if v.Comment != nil {
-					items[i].Comment = *v.Comment
+				if v.TTL > 1 {
+					items[i].TTL = time.Second * time.Duration(v.TTL)
 				}
 			}
 
@@ -85,8 +81,8 @@ func (c *Client) ListRecords(
 
 type ListRecordsRequest struct {
 	ZoneID string
-	Name   *string // Name is used to filter by name.
-	Type   *string // Type is used to filter by type.
+	Name   string // Name is used to filter by name.
+	Type   string // Type is used to filter by type.
 }
 
 type ListRecordsResponseItem struct {
@@ -94,9 +90,9 @@ type ListRecordsResponseItem struct {
 	Content string
 	Name    string
 	Type    string
-	Proxied *bool
+	Proxied bool
 	Comment string
-	TTL     *time.Duration
+	TTL     time.Duration
 }
 
 type listRecordsAPIResponse struct {
@@ -108,19 +104,15 @@ type listRecordsAPIResponseItem struct {
 	ID         string    `json:"id"`
 	Name       string    `json:"name"`
 	Content    string    `json:"content"`
-	Proxied    *bool     `json:"proxied"`
+	Proxied    bool      `json:"proxied"`
 	Proxiable  bool      `json:"proxiable"`
 	Type       string    `json:"type"`
-	Comment    *string   `json:"comment"`
+	Comment    string    `json:"comment"`
 	CreatedOn  time.Time `json:"created_on"`
 	ModifiedOn time.Time `json:"modified_on"`
-	Locked     *bool     `json:"locked"`
-	Meta       *struct {
-		AutoAdded *bool   `json:"auto_added"`
-		Source    *string `json:"source"`
-	} `json:"meta"`
-	Tags     *[]string `json:"tags"`
-	TTL      *int      `json:"ttl"`
-	ZoneID   *string   `json:"zone_id"`
-	ZoneName string    `json:"zone_name"`
+	Locked     bool      `json:"locked"`
+	Tags       []string  `json:"tags"`
+	TTL        int       `json:"ttl"`
+	ZoneID     string    `json:"zone_id"`
+	ZoneName   string    `json:"zone_name"`
 }

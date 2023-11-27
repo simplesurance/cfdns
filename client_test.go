@@ -53,8 +53,8 @@ func TestCreateCNAME(t *testing.T) {
 	var recs []*cfdns.ListRecordsResponseItem
 	recs, err = cfdns.ReadAll(ctx, client.ListRecords(&cfdns.ListRecordsRequest{
 		ZoneID: testZoneID,
-		Name:   &resp.Name,
-		Type:   &cname,
+		Name:   resp.Name,
+		Type:   cname,
 	}))
 	if err != nil {
 		t.Fatalf("Error listing DNS records: %v", err)
@@ -68,7 +68,7 @@ func TestCreateCNAME(t *testing.T) {
 	assertEquals(t, recName, recs[0].Name)
 	assertEquals(t, cname, recs[0].Type)
 	requireNotNil(t, recs[0].Proxied)
-	assertEquals(t, false, *recs[0].Proxied)
+	assertEquals(t, false, recs[0].Proxied)
 	assertEquals(t, comment, recs[0].Comment)
 }
 
@@ -104,9 +104,9 @@ func TestUpdate(t *testing.T) {
 		Name:     recName,
 		Type:     cname,
 		Content:  "2.github.com",
-		Comment:  &changedComment,
-		Proxied:  boolPtr(false),
-		TTL:      durationPtr(2 * time.Hour),
+		Comment:  changedComment,
+		Proxied:  false,
+		TTL:      2 * time.Hour,
 	})
 	if err != nil {
 		t.Fatalf("Error updating DNS record on CloudFlare: %v", err)
@@ -114,8 +114,8 @@ func TestUpdate(t *testing.T) {
 
 	records, err := cfdns.ReadAll(ctx, client.ListRecords(&cfdns.ListRecordsRequest{
 		ZoneID: testZoneID,
-		Name:   stringPtr(resp.Name),
-		Type:   stringPtr(cname),
+		Name:   resp.Name,
+		Type:   cname,
 	}))
 	if err != nil {
 		t.Fatalf("Error list DNS record on CloudFlare: %v", err)
@@ -131,8 +131,8 @@ func TestUpdate(t *testing.T) {
 	requireNotNil(t, records[0].TTL)
 	requireNotNil(t, records[0].Proxied)
 
-	assertEquals(t, false, *records[0].Proxied)
-	assertEquals(t, 2*time.Hour, *records[0].TTL)
+	assertEquals(t, false, records[0].Proxied)
+	assertEquals(t, 2*time.Hour, records[0].TTL)
 }
 
 // Test a few cases of error to make sure error handling works.
