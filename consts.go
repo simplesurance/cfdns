@@ -11,5 +11,5 @@ const (
 	// requests sent to CloudFlare. Cloudflare by default limits clients to
 	// 1200 requests every 5 minutes. The default for the client is to
 	// soft-limit requests to 1000 requests / 5 minutes.
-	defaultRequestInterval = time.Second * 5 * 60 / 1000
+	defaultRequestInterval = time.Minute * 5 / 1000
 )
