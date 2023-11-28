@@ -16,7 +16,7 @@ func (c *Client) DeleteRecord(
 	ctx context.Context,
 	req *DeleteRecordRequest,
 ) (*DeleteRecordResponse, error) {
-	_, err := runWithRetry[*deleteRecordAPIResponse](
+	_, err := sendRequestRetry[*deleteRecordAPIResponse](
 		ctx,
 		c,
 		c.logger.SubLogger(log.WithPrefix("DeleteDNSRecord")),

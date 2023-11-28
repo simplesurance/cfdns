@@ -23,7 +23,7 @@ func (c *Client) CreateRecord(
 		ttl = int(req.TTL.Seconds())
 	}
 
-	resp, err := runWithRetry[*createRecordAPIResponse](
+	resp, err := sendRequestRetry[*createRecordAPIResponse](
 		ctx,
 		c,
 		c.logger.SubLogger(log.WithPrefix("CreateDNSRecord")),

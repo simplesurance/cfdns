@@ -45,13 +45,13 @@ type Client struct {
 	creds Credentials
 }
 
-// runWithRetry tries sending the request until it succeeds, fail to
+// sendRequestRetry tries sending the request until it succeeds, fail to
 // many times of fails once with a permanent error. Wait between retries
 // use exponential backoff.
 //
 // This is not a method of Client because go allows using a type parameter
 // on a method, but not declaring them.
-func runWithRetry[TRESP commonResponseSetter](
+func sendRequestRetry[TRESP commonResponseSetter](
 	ctx context.Context,
 	client *Client,
 	logger *log.Logger,

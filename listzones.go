@@ -32,7 +32,7 @@ func (c *Client) ListZones(
 				queryParams["page"] = []string{strconv.Itoa(page)}
 			}
 
-			resp, err := runWithRetry[*listZoneAPIResponse](
+			resp, err := sendRequestRetry[*listZoneAPIResponse](
 				ctx,
 				c,
 				c.logger.SubLogger(log.WithPrefix("ListZones"), log.WithInt("page", page)),

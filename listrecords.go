@@ -40,7 +40,7 @@ func (c *Client) ListRecords(
 				queryParams.Set("type", req.Type)
 			}
 
-			resp, err := runWithRetry[*listRecordsAPIResponse](
+			resp, err := sendRequestRetry[*listRecordsAPIResponse](
 				ctx,
 				c,
 				c.logger.SubLogger(log.WithPrefix("ListRecords"), log.WithInt("page", page)),

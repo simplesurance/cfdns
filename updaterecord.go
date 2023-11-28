@@ -24,7 +24,7 @@ func (c *Client) UpdateRecord(
 	}
 
 	// PUT https://api.cloudflare.com/client/v4/zones/{zone_identifier}/dns_records/{identifier}
-	resp, err := runWithRetry[*updateRecordAPIResponse](
+	resp, err := sendRequestRetry[*updateRecordAPIResponse](
 		ctx,
 		c,
 		c.logger.SubLogger(log.WithPrefix("UpdateDNSRecord")),
