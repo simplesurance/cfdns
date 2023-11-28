@@ -114,10 +114,7 @@ func sendRequest[TRESP commonResponseSetter](
 	}
 
 	// headers
-	mergeHeaders(req.Header, treq.headers)
-	mergeHeaders(req.Header, http.Header{
-		"Content-Type": {"application/json"},
-	})
+	req.Header.Set("Content-Type", "application/json")
 
 	// credentials
 	reqNoAuth := req.Clone(ctx)
@@ -301,14 +298,6 @@ func logFullHTTPRequestSuccess[TRESP commonResponseSetter](logger *logs.Logger, 
 
 		log("Successful request to CloudFlare:\n" + msg.String())
 	})
-}
-
-// mergeHeaders add the values on the second parameter to the first. In case
-// of duplications, the second parameter "wins".
-func mergeHeaders(dst, target http.Header) {
-	for k, v := range target {
-		dst[k] = v
-	}
 }
 
 func requestURL(treq *request) string {

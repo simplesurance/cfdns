@@ -40,7 +40,6 @@ func (c *Client) ListZones(
 					method:      http.MethodGet,
 					path:        "zones",
 					queryParams: queryParams,
-					headers:     http.Header{},
 					body:        nil,
 				})
 

@@ -33,7 +33,6 @@ func (c *Client) UpdateRecord(
 				url.PathEscape(req.ZoneID),
 				url.PathEscape(req.RecordID)),
 			queryParams: url.Values{},
-			headers:     http.Header{},
 			body: &updateRecordAPIRequest{
 				Name:    req.Name,
 				Type:    req.Type,

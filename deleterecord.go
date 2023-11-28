@@ -26,7 +26,6 @@ func (c *Client) DeleteRecord(
 				url.PathEscape(req.ZoneID),
 				url.PathEscape(req.RecordID)),
 			queryParams: url.Values{},
-			headers:     http.Header{},
 			body:        nil,
 		})
 

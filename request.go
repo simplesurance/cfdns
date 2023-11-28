@@ -13,7 +13,6 @@ type request struct {
 	method      string
 	path        string
 	queryParams url.Values
-	headers     http.Header
 	body        any // the encoding/json package will be used to marshal it
 }
 
