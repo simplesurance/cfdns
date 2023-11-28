@@ -337,15 +337,3 @@ func assertEquals[T comparable](t *testing.T, want, have T) {
 		t.Errorf("Value does not have the expected value:\nhave: %v\nwant: %v", have, want)
 	}
 }
-
-func boolPtr(v bool) *bool {
-	return &v
-}
-
-func durationPtr(d time.Duration) *time.Duration {
-	return &d
-}
-
-func stringPtr(v string) *string {
-	return &v
-}

@@ -17,7 +17,7 @@ func (c *Client) UpdateRecord(
 	ctx context.Context,
 	req *UpdateRecordRequest,
 ) (*UpdateRecordResponse, error) {
-	var ttl int = 1 // on CF "1" means "automatic"
+	ttl := 1 // on CF "1" means "automatic"
 	if req.TTL != 0 {
 		ttl = int(req.TTL.Seconds())
 	}
