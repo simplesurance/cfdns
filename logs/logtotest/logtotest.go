@@ -13,19 +13,19 @@ import (
 )
 
 func ForTest(t *testing.T, failOnError bool) logs.Driver {
-	return testerDriver{test: t, failOnError: failOnError}
+	return testDriver{test: t, failOnError: failOnError}
 }
 
-type testerDriver struct {
+type testDriver struct {
 	test        *testing.T
 	failOnError bool
 }
 
-func (t testerDriver) PreLog() func() {
+func (t testDriver) PreLog() func() {
 	return t.test.Helper
 }
 
-func (t testerDriver) Send(l *logs.Entry) {
+func (t testDriver) Send(l *logs.Entry) {
 	t.test.Helper()
 
 	msg := &strings.Builder{}
