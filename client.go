@@ -139,18 +139,18 @@ func sendRequest[TRESP commonResponseSetter](
 	// handle response
 	if resp.StatusCode >= 400 {
 		err = handleErrorResponse(resp, logger)
-		logFullRequestError(logger, reqNoAuth, reqBody, err)
+		logFullRequestResponse(logger, reqNoAuth, reqBody, resp, rawResponseFromErr(err))
 		return nil, err
 	}
 
 	tresp, err := handleSuccessResponse[TRESP](resp, logger)
 	if err != nil {
-		logFullRequestError(logger, reqNoAuth, reqBody, err)
+		logFullRequestResponse(logger, reqNoAuth, reqBody, resp, rawResponseFromErr(err))
 		return nil, err
 	}
 
 	if client.logSuccess {
-		logFullHTTPRequestSuccess(logger, reqNoAuth, reqBody, tresp)
+		logFullRequestResponse(logger, reqNoAuth, reqBody, resp, tresp.rawBody)
 	}
 
 	return tresp, err
@@ -250,51 +250,27 @@ func handleErrorResponse(resp *http.Response, _ *logs.Logger) error {
 	return ret
 }
 
-func logFullRequestError(logger *logs.Logger, req *http.Request, reqBody []byte, err error) {
+func logFullRequestResponse(
+	logger *logs.Logger,
+	req *http.Request,
+	reqBody []byte,
+	resp *http.Response,
+	respBody []byte,
+) {
 	logger.D(func(log logs.DebugFn) {
 		msg := &strings.Builder{}
 
 		// request
-
-		fmt.Fprintln(msg, "REQUEST:")
-		req.Body = io.NopCloser(bytes.NewReader(reqBody))
-		reqDump, _ := httputil.DumpRequestOut(req, true)
-		fmt.Fprintf(msg, "%s\n\n", reqDump)
-
-		var httpErr HTTPError
-		if errors.As(err, &httpErr) {
-			fmt.Fprintf(msg, "RESPONSE: %d\n", httpErr.Code)
-			for k, v := range httpErr.Headers {
-				fmt.Fprintf(msg, "%s: %s\n", k, strings.Join(v, ", "))
-			}
-			fmt.Fprintln(msg)
-			fmt.Fprintf(msg, "%s", httpErr.RawBody)
-		} else {
-			// for the cases where we didn't go a response from the server
-			fmt.Fprintf(msg, "Response: Go error %T: %v", err, err)
-		}
-
-		log("Failed REST call to CloudFlare:\n" + msg.String())
-	})
-}
-
-func logFullHTTPRequestSuccess[TRESP commonResponseSetter](logger *logs.Logger, req *http.Request, reqBody []byte, resp *response[TRESP]) {
-	logger.D(func(log logs.DebugFn) {
-		msg := &strings.Builder{}
-
-		// request
-		fmt.Fprintln(msg, "REQUEST:")
-		req.Body = io.NopCloser(bytes.NewReader(reqBody))
-		reqDump, _ := httputil.DumpRequestOut(req, true)
-		fmt.Fprintf(msg, "%s\n\n", reqDump)
+		reqDump, _ := httputil.DumpRequestOut(req, false)
+		_, _ = msg.Write(reqDump)
+		_, _ = msg.Write(reqBody)
+		fmt.Fprintln(msg)
+		fmt.Fprintln(msg)
 
 		// response
-		fmt.Fprintf(msg, "RESPONSE: %d\n", resp.code)
-		for k, v := range resp.headers {
-			fmt.Fprintf(msg, "%s: %s\n", k, strings.Join(v, ", "))
-		}
-		fmt.Fprintln(msg)
-		fmt.Fprintf(msg, "%s", resp.rawBody)
+		respDump, _ := httputil.DumpResponse(resp, false)
+		_, _ = msg.Write(respDump)
+		_, _ = msg.Write(respBody)
 
 		log("Successful request to CloudFlare:\n" + msg.String())
 	})
@@ -325,4 +301,14 @@ func readResponseBody(body io.Reader) ([]byte, error) {
 	}
 
 	return ret, nil
+}
+
+func rawResponseFromErr(err error) []byte {
+	var httpErr HTTPError
+	if errors.As(err, &httpErr) {
+		return httpErr.RawBody
+	}
+
+	// if the error is not an HTTPError return instead the error's details
+	return []byte(fmt.Sprintf("%v", err))
 }
