@@ -59,5 +59,5 @@ func (l *logger) Send(entry *logs.Entry) {
 }
 
 func (l *logger) GetHelper() func() {
-	return func() {}
+	return nil
 }

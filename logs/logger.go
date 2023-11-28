@@ -63,27 +63,37 @@ func (l *Logger) D(lf func(log DebugFn)) {
 type DebugFn func(msg string, opt ...Option)
 
 func (l *Logger) d(msg string, opt ...Option) {
-	l.driver.GetHelper()()
+	if helper := l.driver.GetHelper(); helper != nil {
+		helper()
+	}
 	l.log(msg, Debug, opt...)
 }
 
 func (l *Logger) I(msg string, opt ...Option) {
-	l.driver.GetHelper()()
+	if helper := l.driver.GetHelper(); helper != nil {
+		helper()
+	}
 	l.log(msg, Info, opt...)
 }
 
 func (l *Logger) W(msg string, opt ...Option) {
-	l.driver.GetHelper()()
+	if helper := l.driver.GetHelper(); helper != nil {
+		helper()
+	}
 	l.log(msg, Warn, opt...)
 }
 
 func (l *Logger) E(msg string, opt ...Option) {
-	l.driver.GetHelper()()
+	if helper := l.driver.GetHelper(); helper != nil {
+		helper()
+	}
 	l.log(msg, Error, opt...)
 }
 
 func (l *Logger) log(msg string, sev Severity, opt ...Option) {
-	l.driver.GetHelper()()
+	if helper := l.driver.GetHelper(); helper != nil {
+		helper()
+	}
 
 	loggerOpts := applyOptions(l.options...)
 	messageOpts := applyOptions(opt...)
