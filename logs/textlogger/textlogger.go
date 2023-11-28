@@ -58,6 +58,6 @@ func (l *logger) Send(entry *logs.Entry) {
 	fmt.Fprintln(w)
 }
 
-func (l *logger) GetHelper() func() {
+func (l *logger) PreLog() func() {
 	return nil
 }
