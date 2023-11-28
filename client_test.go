@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"testing"
@@ -224,7 +225,7 @@ func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID s
 	for {
 		item, err := resp.Next(ctx)
 		if err != nil {
-			if errors.Is(err, cfdns.ErrDone) {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 
@@ -286,7 +287,7 @@ func cleanup(
 	for {
 		record, err := iter.Next(ctx)
 		if err != nil {
-			if errors.Is(err, cfdns.ErrDone) {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 

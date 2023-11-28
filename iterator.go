@@ -3,9 +3,8 @@ package cfdns
 import (
 	"context"
 	"errors"
+	"io"
 )
-
-var ErrDone = errors.New("done")
 
 // Iterator implements an iterator algorithm from a function that fetches
 // blocks of data. This allows having fixed-memory usage when reading
@@ -19,6 +18,8 @@ type Iterator[T any] struct {
 
 type fetchFn[T any] func(ctx context.Context) (batch []*T, last bool, _ error)
 
+// Next fetches the next item. If there are no more records io.EOF will be
+// returned.
 func (it *Iterator[T]) Next(ctx context.Context) (retElm *T, err error) {
 	if len(it.elements) == 0 && !it.isLast {
 		var elements []*T
@@ -31,7 +32,7 @@ func (it *Iterator[T]) Next(ctx context.Context) (retElm *T, err error) {
 	}
 
 	if len(it.elements) == 0 {
-		return nil, ErrDone
+		return nil, io.EOF
 	}
 
 	retElm = it.elements[0]
@@ -46,7 +47,7 @@ func ReadAll[T any](ctx context.Context, it *Iterator[T]) ([]*T, error) {
 	for {
 		item, err := it.Next(ctx)
 		if err != nil {
-			if errors.Is(err, ErrDone) {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 
