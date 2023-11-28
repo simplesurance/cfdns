@@ -7,7 +7,7 @@ import (
 type Driver interface {
 	Send(l *Entry)
 
-	// GetHelper returns a function that is called before each logging call
+	// PreLog returns a function that is called before each logging call
 	// is made. This is only useful if the driver needs to find out the
 	// caller and has a way of skipping some of the caller with a helper
 	// function like `testing.T`.Helper(). Since the logger itself will get
@@ -20,7 +20,7 @@ type Driver interface {
 	// that produce an error log. This loggers return `t.Helper`, and as
 	// a result, the test log messages will point to the code that called
 	// the logger, not to the log library itself.
-	GetHelper() func()
+	PreLog() func()
 }
 
 type Entry struct {
@@ -49,7 +49,7 @@ const (
 	Error
 )
 
-var sevToString = map[Severity]string{
+var sevToString = [...]string{
 	Debug: "debug",
 	Info:  "info",
 	Warn:  "warn",

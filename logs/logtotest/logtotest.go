@@ -21,7 +21,7 @@ type testerDriver struct {
 	failOnError bool
 }
 
-func (t testerDriver) GetHelper() func() {
+func (t testerDriver) PreLog() func() {
 	return t.test.Helper
 }
 
