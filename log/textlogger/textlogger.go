@@ -9,10 +9,10 @@ import (
 	"github.com/fatih/color"
 	"golang.org/x/exp/maps"
 
-	"github.com/simplesurance/cfdns/logs"
+	"github.com/simplesurance/cfdns/log"
 )
 
-func New(out, err io.Writer) logs.Driver {
+func New(out, err io.Writer) log.Driver {
 	return &logger{
 		outw: out,
 		errw: err,
@@ -24,9 +24,9 @@ type logger struct {
 	errw io.Writer
 }
 
-func (l *logger) Send(entry *logs.Entry) {
+func (l *logger) Send(entry *log.Entry) {
 	w := l.outw
-	if entry.Severity == logs.Error {
+	if entry.Severity == log.Error {
 		w = l.errw
 	}
 
@@ -36,11 +36,11 @@ func (l *logger) Send(entry *logs.Entry) {
 		entry.Message)
 
 	switch entry.Severity {
-	case logs.Info:
+	case log.Info:
 		msg = color.New(color.FgGreen).Sprint(msg)
-	case logs.Warn:
+	case log.Warn:
 		msg = color.New(color.FgYellow).Sprint(msg)
-	case logs.Error:
+	case log.Error:
 		msg = color.New(color.FgRed).Sprint(msg)
 	}
 

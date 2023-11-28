@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/simplesurance/cfdns/logs"
+	"github.com/simplesurance/cfdns/log"
 	"github.com/simplesurance/cfdns/retry"
 )
 
@@ -54,7 +54,7 @@ type Client struct {
 func runWithRetry[TRESP commonResponseSetter](
 	ctx context.Context,
 	client *Client,
-	logger *logs.Logger,
+	logger *log.Logger,
 	req *request,
 ) (
 	*response[TRESP],
@@ -78,7 +78,7 @@ func runWithRetry[TRESP commonResponseSetter](
 func sendRequest[TRESP commonResponseSetter](
 	ctx context.Context,
 	client *Client,
-	logger *logs.Logger,
+	logger *log.Logger,
 	treq *request,
 ) (
 	*response[TRESP],
@@ -156,7 +156,7 @@ func sendRequest[TRESP commonResponseSetter](
 	return tresp, err
 }
 
-func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, logger *logs.Logger) (
+func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, logger *log.Logger) (
 	*response[TRESP],
 	error,
 ) {
@@ -200,7 +200,7 @@ func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, 
 	return &ret, nil
 }
 
-func handleErrorResponse(resp *http.Response, _ *logs.Logger) error {
+func handleErrorResponse(resp *http.Response, _ *log.Logger) error {
 	// the error response must always support errors.As(err, HTTPError)
 	httpErr := HTTPError{
 		Code:    resp.StatusCode,
@@ -251,13 +251,13 @@ func handleErrorResponse(resp *http.Response, _ *logs.Logger) error {
 }
 
 func logFullRequestResponse(
-	logger *logs.Logger,
+	logger *log.Logger,
 	req *http.Request,
 	reqBody []byte,
 	resp *http.Response,
 	respBody []byte,
 ) {
-	logger.D(func(log logs.DebugFn) {
+	logger.D(func(log log.DebugFn) {
 		msg := &strings.Builder{}
 
 		// request

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/simplesurance/cfdns/logs"
+	"github.com/simplesurance/cfdns/log"
 )
 
 // ListRecords lists DNS records on a zone.
@@ -43,7 +43,7 @@ func (c *Client) ListRecords(
 			resp, err := runWithRetry[*listRecordsAPIResponse](
 				ctx,
 				c,
-				c.logger.SubLogger(logs.WithPrefix("ListRecords"), logs.WithInt("page", page)),
+				c.logger.SubLogger(log.WithPrefix("ListRecords"), log.WithInt("page", page)),
 				&request{
 					method:      http.MethodGet,
 					path:        fmt.Sprintf("zones/%s/dns_records", url.PathEscape(req.ZoneID)),

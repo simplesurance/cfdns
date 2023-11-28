@@ -1,4 +1,4 @@
-package logs
+package log
 
 import (
 	"maps"
@@ -52,7 +52,7 @@ func (l *Logger) SubLogger(opts ...Option) *Logger {
 // Since the callback function will not be executed if debug level is
 // not enabled, its cost can be avoided in production, while still keeping
 // the ability of debugging issues when they happen.
-func (l *Logger) D(lf func(log DebugFn)) {
+func (l *Logger) D(lf func(lg DebugFn)) {
 	if !l.debugEnabledFn() {
 		return
 	}

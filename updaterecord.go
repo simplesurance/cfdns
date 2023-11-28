@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/simplesurance/cfdns/logs"
+	"github.com/simplesurance/cfdns/log"
 )
 
 // UpdateRecord updates a DNS record on CloudFlare. A TTL of 1 second or less
@@ -27,7 +27,7 @@ func (c *Client) UpdateRecord(
 	resp, err := runWithRetry[*updateRecordAPIResponse](
 		ctx,
 		c,
-		c.logger.SubLogger(logs.WithPrefix("UpdateDNSRecord")),
+		c.logger.SubLogger(log.WithPrefix("UpdateDNSRecord")),
 		&request{
 			method: http.MethodPut,
 			path: fmt.Sprintf("zones/%s/dns_records/%s",
@@ -49,7 +49,7 @@ func (c *Client) UpdateRecord(
 		return nil, err
 	}
 
-	c.logger.D(func(log logs.DebugFn) {
+	c.logger.D(func(log log.DebugFn) {
 		log(fmt.Sprintf("Record %s (%s %s %s) updated",
 			req.RecordID, req.Name, req.Type, req.Content))
 	})

@@ -7,12 +7,11 @@ import (
 	"testing"
 
 	"github.com/fatih/color"
+	"github.com/simplesurance/cfdns/log"
 	"golang.org/x/exp/maps"
-
-	"github.com/simplesurance/cfdns/logs"
 )
 
-func ForTest(t *testing.T, failOnError bool) logs.Driver {
+func ForTest(t *testing.T, failOnError bool) log.Driver {
 	return testDriver{test: t, failOnError: failOnError}
 }
 
@@ -25,7 +24,7 @@ func (t testDriver) PreLog() func() {
 	return t.test.Helper
 }
 
-func (t testDriver) Send(l *logs.Entry) {
+func (t testDriver) Send(l *log.Entry) {
 	t.test.Helper()
 
 	msg := &strings.Builder{}
@@ -39,18 +38,18 @@ func (t testDriver) Send(l *logs.Entry) {
 	}
 
 	logf := t.test.Log
-	if t.failOnError && l.Severity == logs.Error {
+	if t.failOnError && l.Severity == log.Error {
 		logf = t.test.Error
 	}
 
 	text := msg.String()
 
 	switch l.Severity {
-	case logs.Error:
+	case log.Error:
 		text = color.New(color.FgRed).Sprint(text)
-	case logs.Warn:
+	case log.Warn:
 		text = color.New(color.FgYellow).Sprint(text)
-	case logs.Info:
+	case log.Info:
 		text = color.New(color.FgGreen).Sprint(text)
 	}
 

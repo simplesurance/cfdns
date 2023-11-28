@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/simplesurance/cfdns/logs"
+	"github.com/simplesurance/cfdns/log"
 )
 
 // Listzones lists zones on CloudFlare.
@@ -35,7 +35,7 @@ func (c *Client) ListZones(
 			resp, err := runWithRetry[*listZoneAPIResponse](
 				ctx,
 				c,
-				c.logger.SubLogger(logs.WithPrefix("ListZones"), logs.WithInt("page", page)),
+				c.logger.SubLogger(log.WithPrefix("ListZones"), log.WithInt("page", page)),
 				&request{
 					method:      http.MethodGet,
 					path:        "zones",

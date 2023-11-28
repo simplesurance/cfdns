@@ -7,15 +7,15 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/simplesurance/cfdns/logs"
-	"github.com/simplesurance/cfdns/logs/textlogger"
+	"github.com/simplesurance/cfdns/log"
+	"github.com/simplesurance/cfdns/log/textlogger"
 )
 
 type Option func(*settings)
 
 type settings struct {
 	ratelim        *rate.Limiter
-	logger         *logs.Logger
+	logger         *log.Logger
 	httpClient     *http.Client
 	logSuccess     bool
 	requestTimeout time.Duration
@@ -24,7 +24,7 @@ type settings struct {
 func applyOptions(opts ...Option) *settings {
 	ret := settings{
 		ratelim:        rate.NewLimiter(rate.Every(defaultRequestInterval), 1),
-		logger:         logs.New(textlogger.New(os.Stdout, os.Stderr)),
+		logger:         log.New(textlogger.New(os.Stdout, os.Stderr)),
 		httpClient:     http.DefaultClient,
 		requestTimeout: 30 * time.Second,
 	}
@@ -41,7 +41,7 @@ func WithRateLimiter(ratelim *rate.Limiter) Option {
 	}
 }
 
-func WithLogger(logger *logs.Logger) Option {
+func WithLogger(logger *log.Logger) Option {
 	return func(s *settings) {
 		s.logger = logger
 	}

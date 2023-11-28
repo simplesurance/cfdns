@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/simplesurance/cfdns/logs"
+	"github.com/simplesurance/cfdns/log"
 )
 
 // CreateRecord creates a DNS record on CloudFlare. A TTL of 1 second or less
@@ -26,7 +26,7 @@ func (c *Client) CreateRecord(
 	resp, err := runWithRetry[*createRecordAPIResponse](
 		ctx,
 		c,
-		c.logger.SubLogger(logs.WithPrefix("CreateDNSRecord")),
+		c.logger.SubLogger(log.WithPrefix("CreateDNSRecord")),
 		&request{
 			method:      http.MethodPost,
 			path:        fmt.Sprintf("zones/%s/dns_records", url.PathEscape(req.ZoneID)),
@@ -46,7 +46,7 @@ func (c *Client) CreateRecord(
 		return nil, err
 	}
 
-	c.logger.D(func(log logs.DebugFn) {
+	c.logger.D(func(log log.DebugFn) {
 		log(fmt.Sprintf("Record %s %s %s created with ID=%s",
 			req.Name, req.Type, req.Content, resp.body.Result.ID))
 	})

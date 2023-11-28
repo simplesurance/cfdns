@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/simplesurance/cfdns/logs"
+	"github.com/simplesurance/cfdns/log"
 )
 
 // ExpBackoff executes the provided function, retrying it with exponential
@@ -33,7 +33,7 @@ import (
 // returned. If other error is returned, the delay logic will be executed.
 func ExpBackoff(
 	ctx context.Context,
-	logger *logs.Logger,
+	logger *log.Logger,
 	firstDelay, maxDelay time.Duration,
 	factor float64,
 	attempts int,
@@ -50,9 +50,9 @@ func ExpBackoff(
 
 		if attempts > 0 && attempt >= attempts {
 			logger.W("f() kept failing, exhausting retry limit; giving up.",
-				logs.WithInt("attempt", attempt),
-				logs.WithDuration("total_delay", time.Since(start)),
-				logs.WithError(err))
+				log.WithInt("attempt", attempt),
+				log.WithDuration("total_delay", time.Since(start)),
+				log.WithError(err))
 
 			var permError PermanentError
 			if errors.As(err, &permError) {
@@ -65,32 +65,32 @@ func ExpBackoff(
 		var permError PermanentError
 		if errors.As(err, &permError) {
 			logger.W("f() returned a permanent error; giving up.",
-				logs.WithInt("attempt", attempt),
-				logs.WithDuration("total_delay", time.Since(start)),
-				logs.WithError(permError.Cause))
+				log.WithInt("attempt", attempt),
+				log.WithDuration("total_delay", time.Since(start)),
+				log.WithError(permError.Cause))
 
 			return permError.Cause
 		}
 
 		logger.W("f() returned an error",
-			logs.WithInt("attempt", attempt),
-			logs.WithDuration("total_delay", time.Since(start)),
-			logs.WithError(err))
+			log.WithInt("attempt", attempt),
+			log.WithDuration("total_delay", time.Since(start)),
+			log.WithError(err))
 
 		select {
 		case <-ctx.Done():
 			err := ctx.Err()
-			logger.D(func(log logs.DebugFn) {
-				log("context was canceled",
-					logs.WithInt("attempt", attempt),
-					logs.WithDuration("total_delay", time.Since(start)),
-					logs.WithError(err))
+			logger.D(func(lg log.DebugFn) {
+				lg("context was canceled",
+					log.WithInt("attempt", attempt),
+					log.WithDuration("total_delay", time.Since(start)),
+					log.WithError(err))
 			})
 			return err
 		case <-time.After(time.Duration(delay * float64(time.Second))):
 			delay *= factor
-			logger.D(func(log logs.DebugFn) {
-				log(fmt.Sprintf("next delay: %f seconds", delay))
+			logger.D(func(lg log.DebugFn) {
+				lg(fmt.Sprintf("next delay: %f seconds", delay))
 			})
 			if delay > maxDelay.Seconds() {
 				delay = maxDelay.Seconds()
