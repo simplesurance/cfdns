@@ -10,15 +10,16 @@ import (
 	"github.com/simplesurance/cfdns/logs"
 )
 
-// UpdateRecord updates a DNS record on CloudFlare.
+// UpdateRecord updates a DNS record on CloudFlare. A TTL of 1 second or less
+// will use the "automatic" TTL from CloudFlare.
 //
 // API Reference: https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-update-dns-record
 func (c *Client) UpdateRecord(
 	ctx context.Context,
 	req *UpdateRecordRequest,
 ) (*UpdateRecordResponse, error) {
-	ttl := 1 // on CF "1" means "automatic"
-	if req.TTL != 0 {
+	ttl := 1 // on CF the value "1" means "automatic"
+	if req.TTL > time.Second {
 		ttl = int(req.TTL.Seconds())
 	}
 

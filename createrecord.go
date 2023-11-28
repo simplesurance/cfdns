@@ -10,16 +10,17 @@ import (
 	"github.com/simplesurance/cfdns/logs"
 )
 
-// CreateRecord creates a DNS record on CloudFlare.
+// CreateRecord creates a DNS record on CloudFlare. A TTL of 1 second or less
+// will use CloudFlare's "automatic" TTL.
 //
 // API Reference: https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-create-dns-record
 func (c *Client) CreateRecord(
 	ctx context.Context,
 	req *CreateRecordRequest,
 ) (*CreateRecordResponse, error) {
-	var ttl int
-	if req.TTL == 0 {
-		ttl = 1 // Value of "1" means "automatic" (see CF documentation)
+	ttl := 1 // on CF the value "1" means "automatic"
+	if req.TTL > time.Second {
+		ttl = int(req.TTL.Seconds())
 	}
 
 	resp, err := runWithRetry[*createRecordAPIResponse](
