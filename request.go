@@ -1,7 +1,6 @@
 package cfdns
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -32,7 +31,7 @@ type HTTPError struct {
 }
 
 func (e HTTPError) Error() string {
-	msg := &bytes.Buffer{}
+	msg := &strings.Builder{}
 
 	fmt.Fprintf(msg, "HTTP %d\n", e.Code)
 	headers := maps.Keys(e.Headers)

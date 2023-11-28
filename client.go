@@ -255,7 +255,7 @@ func handleErrorResponse(resp *http.Response, _ *logs.Logger) error {
 
 func logFullRequestError(logger *logs.Logger, req *http.Request, reqBody []byte, err error) {
 	logger.D(func(log logs.DebugFn) {
-		msg := &bytes.Buffer{}
+		msg := &strings.Builder{}
 
 		// request
 
@@ -283,7 +283,7 @@ func logFullRequestError(logger *logs.Logger, req *http.Request, reqBody []byte,
 
 func logFullHTTPRequestSuccess[TRESP commonResponseSetter](logger *logs.Logger, req *http.Request, reqBody []byte, resp *response[TRESP]) {
 	logger.D(func(log logs.DebugFn) {
-		msg := &bytes.Buffer{}
+		msg := &strings.Builder{}
 
 		// request
 		fmt.Fprintln(msg, "REQUEST:")

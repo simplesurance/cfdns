@@ -1,9 +1,9 @@
 package logtotest
 
 import (
-	"bytes"
 	"fmt"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/fatih/color"
@@ -28,7 +28,7 @@ func (t testerDriver) GetHelper() func() {
 func (t testerDriver) Send(l *logs.Entry) {
 	t.test.Helper()
 
-	msg := &bytes.Buffer{}
+	msg := &strings.Builder{}
 
 	fmt.Fprintf(msg, "[%s] %s", l.Severity, l.Message)
 
