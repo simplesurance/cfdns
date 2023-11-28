@@ -123,7 +123,7 @@ func sendRequest[TRESP commonResponseSetter](
 	// send the request
 	resp, err := client.httpClient.Do(req)
 	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
 			return nil, retry.PermanentError{Cause: err}
 		}
 
