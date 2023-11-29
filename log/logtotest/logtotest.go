@@ -7,8 +7,9 @@ import (
 	"testing"
 
 	"github.com/fatih/color"
-	"github.com/simplesurance/cfdns/log"
 	"golang.org/x/exp/maps"
+
+	"github.com/simplesurance/cfdns/log"
 )
 
 func ForTest(t *testing.T, failOnError bool) log.Driver {

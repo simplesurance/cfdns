@@ -44,9 +44,9 @@ func (l *Logger) SubLogger(opts ...Option) *Logger {
 //
 // Usage:
 //
-//	logger.D(func(log logs.DebugFn){
+//	logger.D(func(lg log.DebugFn){
 //	  msg := computeSomethingExpensive()
-//	  log(msg)
+//	  lg(msg)
 //	})
 //
 // Since the callback function will not be executed if debug level is
