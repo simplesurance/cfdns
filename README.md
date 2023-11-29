@@ -1,5 +1,5 @@
-# Proteus
-[![Go Report Card](https://goreportcard.com/badge/github.com/simplesurance/proteus)](https://goreportcard.com/report/github.com/simplesurance/proteus)
+# CFDNS
+[![Go Report Card](https://goreportcard.com/badge/github.com/simplesurance/cfdns)](https://goreportcard.com/report/github.com/simplesurance/cfdns)
 
 ## About
 
