@@ -18,7 +18,7 @@ import (
 // retrying the first time. On each retry the delay will be multiplied by
 // the provided factor, but will not be longer than maxDelay.
 //
-// attempts indicates how many times the function is invoked. The value
+// maxTries indicates how many times the function is invoked. The value
 // 1 means to call it only once, never retrying if it fails. The number 2
 // allows for 1 retry, and so on. A value of 0 or less will make it retry
 // forever. If f() keeps failing after the number of retries is reached it
@@ -36,7 +36,7 @@ func ExpBackoff(
 	logger *log.Logger,
 	firstDelay, maxDelay time.Duration,
 	factor float64,
-	attempts int,
+	maxTries int,
 	f func() error,
 ) error {
 	start := time.Now()
@@ -48,7 +48,7 @@ func ExpBackoff(
 			return nil
 		}
 
-		if attempts > 0 && attempt >= attempts {
+		if maxTries > 0 && attempt >= maxTries {
 			logger.W("f() kept failing, exhausting retry limit; giving up.",
 				log.WithInt("attempt", attempt),
 				log.WithDuration("total_delay", time.Since(start)),
