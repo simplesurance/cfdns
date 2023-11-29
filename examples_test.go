@@ -75,7 +75,7 @@ func ExampleClient_CreateRecord() {
 	// Output: Created DNS record example-record.simplesurance.top
 }
 
-func ExampleClient_UpdateRecord_error() {
+func ExampleHTTPError() {
 	ctx := context.Background()
 	apitoken := os.Getenv("TEST_CF_APITOKEN")
 	testZoneID := os.Getenv("TEST_CF_ZONE_ID")
@@ -98,10 +98,10 @@ func ExampleClient_UpdateRecord_error() {
 
 	httpErr := cfdns.HTTPError{}
 	if !errors.As(err, &httpErr) {
-		panic("")
+		panic("not an HTTP error")
 	}
 
-	fmt.Printf("Got HTTP error %v", httpErr)
+	fmt.Printf("Got HTTP error %v", httpErr.Code) // can also access response headers and raw response body
 
-	// Output: Created DNS record example-record.simplesurance.top
+	// Output: Got HTTP error 400
 }
