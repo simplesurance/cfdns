@@ -14,7 +14,7 @@ import (
 
 	"github.com/simplesurance/cfdns"
 	"github.com/simplesurance/cfdns/log"
-	"github.com/simplesurance/cfdns/log/logtotest"
+	"github.com/simplesurance/cfdns/log/testtarget"
 )
 
 // Integration Tests
@@ -216,7 +216,7 @@ func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID s
 	}
 
 	client := cfdns.NewClient(creds,
-		cfdns.WithLogger(log.New(logtotest.ForTest(t, true),
+		cfdns.WithLogger(log.New(testtarget.ForTest(t, true),
 			log.WithDebugEnabledFn(func() bool { return true }))),
 		cfdns.WithLogSuccessfulResponses(true))
 

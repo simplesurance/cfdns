@@ -74,3 +74,34 @@ func ExampleClient_CreateRecord() {
 
 	// Output: Created DNS record example-record.simplesurance.top
 }
+
+func ExampleClient_UpdateRecord_error() {
+	ctx := context.Background()
+	apitoken := os.Getenv("TEST_CF_APITOKEN")
+	testZoneID := os.Getenv("TEST_CF_ZONE_ID")
+
+	creds, err := cfdns.APIToken(apitoken)
+	if err != nil {
+		panic(err)
+	}
+
+	client := cfdns.NewClient(creds)
+
+	_, err = client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
+		ZoneID:  testZoneID,
+		Name:    "invalid name",
+		Type:    "A",
+		Content: "github.com",
+		Comment: "Created by cfdns example",
+		TTL:     30 * time.Minute,
+	})
+
+	httpErr := cfdns.HTTPError{}
+	if !errors.As(err, &httpErr) {
+		panic("")
+	}
+
+	fmt.Printf("Got HTTP error %v", httpErr)
+
+	// Output: Created DNS record example-record.simplesurance.top
+}

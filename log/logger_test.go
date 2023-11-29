@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/simplesurance/cfdns/log"
-	"github.com/simplesurance/cfdns/log/logtotest"
+	"github.com/simplesurance/cfdns/log/testtarget"
 )
 
 func TestLogger(t *testing.T) {
-	logger := log.New(logtotest.ForTest(t, false),
+	logger := log.New(testtarget.ForTest(t, false),
 		log.WithPrefix("TestLogger"),
 		log.WithDebugEnabledFn(func() bool { return true }))
 
@@ -29,7 +29,7 @@ func TestLogger(t *testing.T) {
 }
 
 func TestSubLogger(t *testing.T) {
-	logger := log.New(logtotest.ForTest(t, false),
+	logger := log.New(testtarget.ForTest(t, false),
 		log.WithPrefix("TestLogger"),
 		log.WithDebugEnabledFn(func() bool { return true }))
 
@@ -45,7 +45,7 @@ func TestSubLogger(t *testing.T) {
 
 func TestDebugEnabled(t *testing.T) {
 	debugEnabled := false
-	logger := log.New(logtotest.ForTest(t, false),
+	logger := log.New(testtarget.ForTest(t, false),
 		log.WithPrefix("TestLogger"),
 		log.WithDebugEnabledFn(func() bool { return debugEnabled }))
 

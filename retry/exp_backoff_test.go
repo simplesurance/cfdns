@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/simplesurance/cfdns/log"
-	"github.com/simplesurance/cfdns/log/logtotest"
+	"github.com/simplesurance/cfdns/log/testtarget"
 	"github.com/simplesurance/cfdns/retry"
 )
 
@@ -57,7 +57,7 @@ func TestRetry(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			logger := log.New(logtotest.ForTest(t, true),
+			logger := log.New(testtarget.ForTest(t, true),
 				log.WithDebugEnabledFn(func() bool { return true }))
 			fCallCount := 0
 
@@ -98,7 +98,7 @@ func TestRetry(t *testing.T) {
 }
 
 func TestContextCancel(t *testing.T) {
-	logger := log.New(logtotest.ForTest(t, true),
+	logger := log.New(testtarget.ForTest(t, true),
 		log.WithDebugEnabledFn(func() bool { return true }))
 
 	ctx, done := context.WithTimeout(context.Background(), 100*time.Millisecond)

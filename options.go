@@ -2,13 +2,12 @@ package cfdns
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"golang.org/x/time/rate"
 
 	"github.com/simplesurance/cfdns/log"
-	"github.com/simplesurance/cfdns/log/textlogger"
+	"github.com/simplesurance/cfdns/log/niltarget"
 )
 
 type Option func(*settings)
@@ -24,7 +23,7 @@ type settings struct {
 func applyOptions(opts ...Option) *settings {
 	ret := settings{
 		ratelim:        rate.NewLimiter(rate.Every(defaultRequestInterval), 1),
-		logger:         log.New(textlogger.New(os.Stdout, os.Stderr)),
+		logger:         log.New(niltarget.New()), // by default log messages are suppressed
 		httpClient:     http.DefaultClient,
 		requestTimeout: 30 * time.Second,
 	}

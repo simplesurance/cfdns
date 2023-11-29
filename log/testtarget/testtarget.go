@@ -1,4 +1,10 @@
-package logtotest
+// Package testtarget is a log driver that sends log messages to a
+// go test. Specifically, log messages are sent to `logging`.T.Log.
+//
+// This driver can be configured to automatically fail a test if an error
+// message is produced. In this case, the log message is sent to
+// `logging`.T.Error.
+package testtarget
 
 import (
 	"fmt"

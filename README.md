@@ -4,10 +4,13 @@
 ## About
 
 Non-Official GO CloudFlare DNS API client for go. It was created because
-the official API is not stable and breaks both expectations multiple times
-a year. Some times the change is easily detected, because causes compilation
-errors, in other cases the change is not detected, like changes in the
-returned error. It is designed to support only the DNS service.
+the official API is not stable and breaks its consumers multiple times
+a year. Some of the breaks are immediately apparent because the compiler
+itself can find the problem, sometimes the expectation can't be detected
+automatically, while when the returned error is changed, leading to
+unexpected behavior in code that might be mission-critical.
+
+This library was designed to support only the DNS service.
 
 ## Project Status
 
@@ -22,6 +25,10 @@ go get github.com/simplesurance/cfdns@latest
 ## How to Use
 
 ### Listing Records
+
+Listing records uses the _Iterator_ pattern to completely abstract the
+complexity of pagination, while keeping constant memory usage, even when
+the resulting list is arbitrarily large.
 
 ```go
 ctx := context.Background()
@@ -50,6 +57,9 @@ for {
 ```
 
 ### Create and Delete a DNS Record
+
+All methods that do not return a list receive a context and a request
+struct and return a struct and an error.
 
 ```go
 ctx := context.Background()
@@ -85,4 +95,17 @@ _, _ = client.DeleteRecord(ctx, &cfdns.DeleteRecordRequest{
 })
 
 // Output: Created DNS record example-record.simplesurance.top
+```
+
+## Error Handling
+
+### CloudFlareError
+
+### HTTPError
+
+All errors that result from calling the CloudFlare REST API allow reading
+the HTTP response that caused it.
+
+```go
+
 ```

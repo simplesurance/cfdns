@@ -1,4 +1,9 @@
-package textlogger
+// Package texttarget is a log driver that encodes log messages as text and
+// writes log messages to a provided writer. A separated writer may be
+// provided for error messages.
+//
+// The error messages are colored according to the error severity.
+package texttarget
 
 import (
 	"fmt"
@@ -14,26 +19,35 @@ import (
 )
 
 func New(out, err io.Writer) log.Driver {
-	return &logger{
-		outw: out,
-		errw: err,
+	ret := &logger{
+		outw:   out,
+		errw:   err,
+		outMux: &sync.Mutex{},
+		errMux: &sync.Mutex{},
 	}
+
+	// if "out" and "err" writers are the same they will share the same mutex.
+	if out == err {
+		ret.errMux = ret.outMux
+	}
+
+	return ret
 }
 
 type logger struct {
 	outw io.Writer
 	errw io.Writer
 
-	outMux sync.Mutex
-	errMux sync.Mutex
+	outMux *sync.Mutex
+	errMux *sync.Mutex
 }
 
 func (l *logger) Send(entry *log.Entry) {
 	w := l.outw
-	mux := &l.outMux
+	mux := l.outMux
 	if entry.Severity == log.Error {
 		w = l.errw
-		mux = &l.errMux
+		mux = l.errMux
 	}
 
 	msg := fmt.Sprintf("%s [%s] %s",
