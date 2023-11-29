@@ -58,7 +58,7 @@ func ExampleClient_CreateRecord() {
 		Content: "github.com",
 		Proxied: false,
 		Comment: "Created by cfdns example",
-		TTL:     time.Duration(30 * time.Minute),
+		TTL:     30 * time.Minute,
 	})
 	if err != nil {
 		panic(err)
