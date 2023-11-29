@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/fatih/color"
@@ -22,12 +23,17 @@ func New(out, err io.Writer) log.Driver {
 type logger struct {
 	outw io.Writer
 	errw io.Writer
+
+	outMux sync.Mutex
+	errMux sync.Mutex
 }
 
 func (l *logger) Send(entry *log.Entry) {
 	w := l.outw
+	mux := &l.outMux
 	if entry.Severity == log.Error {
 		w = l.errw
+		mux = &l.errMux
 	}
 
 	msg := fmt.Sprintf("%s [%s] %s",
@@ -55,6 +61,8 @@ func (l *logger) Send(entry *log.Entry) {
 		fmt.Fprint(w, color.New(color.FgMagenta).Sprintf(" %s=%v", key, val))
 	}
 
+	mux.Lock()
+	defer mux.Unlock()
 	fmt.Fprintln(w)
 }
 
