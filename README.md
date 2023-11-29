@@ -99,7 +99,57 @@ _, _ = client.DeleteRecord(ctx, &cfdns.DeleteRecordRequest{
 
 ## Error Handling
 
+Rules for errors returned are as follows:
+
+1. If the error response came from sending the HTTP response to the
+   CloudFlare, even if it is an invalid response, the error is
+   HTTPError;
+2. If the response is a valid CloudFlare API response, then the error
+   is also a CloudFlareError (so it is both HTTPError and CloudFlareError);
+3. If not valid HTTP response could be obtained from the server, then some
+   other error is returned.
+
+In all cases, the caller MUST use `errors.As()` to get either the
+`HTTPError` or `CloudFlareError` object.
+
 ### CloudFlareError
+
+```go
+ctx := context.Background()
+apitoken := os.Getenv("TEST_CF_APITOKEN")
+testZoneID := os.Getenv("TEST_CF_ZONE_ID")
+
+creds, err := cfdns.APIToken(apitoken)
+if err != nil {
+	panic(err)
+}
+
+client := cfdns.NewClient(creds)
+
+_, err = client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
+	ZoneID:  testZoneID,
+	Name:    "invalid name",
+	Type:    "A",
+	Content: "github.com",
+	Comment: "Created by cfdns example",
+	TTL:     30 * time.Minute,
+})
+
+cfErr := cfdns.CloudFlareError{}
+if !errors.As(err, &cfErr) {
+	panic("not a CloudFlareError")
+}
+
+fmt.Printf("Got HTTP error %v\n", cfErr.HTTPError.Code) // can also access response headers and raw response body
+
+for _, cfe := range cfErr.Errors {
+	fmt.Printf("- CF error %d: %s\n", cfe.Code, cfe.Message) // can also access response headers and raw response body
+}
+
+// Output:
+// Got HTTP error 400
+// - CF error 1004: DNS Validation Error
+```
 
 ### HTTPError
 
