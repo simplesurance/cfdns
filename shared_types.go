@@ -1,5 +1,7 @@
 package cfdns
 
+import "slices"
+
 type cfResponseCommon struct {
 	Success bool `json:"success"`
 	Errors  []struct {
@@ -26,10 +28,8 @@ type cfResponseCommon struct {
 // of the provided codes.
 func (rc *cfResponseCommon) IsAnyCFErrorCode(code ...int) bool {
 	for _, haveErr := range rc.Errors {
-		for _, wantErr := range code {
-			if haveErr.Code == wantErr {
-				return true
-			}
+		if slices.Contains(code, haveErr.Code) {
+			return true
 		}
 	}
 
