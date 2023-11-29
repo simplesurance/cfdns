@@ -11,5 +11,5 @@ func New() log.Driver {
 
 type logger struct{}
 
-func (l *logger) Send(entry *log.Entry) {}
-func (l *logger) PreLog() func()        { return nil }
+func (l *logger) Send(_ *log.Entry) {}
+func (l *logger) PreLog() func()    { return nil }
