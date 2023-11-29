@@ -21,9 +21,10 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
           cache: true
-      - name: run tests
+      - name: Run go tests
         env:
           TEST_CF_ZONE_NAME: "${{ vars.TEST_CF_ZONE_NAME }}"
+          TEST_CF_ZONE_ID: "${{ vars.TEST_CF_ZONE_ID }}"
           TEST_CF_APITOKEN: "${{ secrets.TEST_CF_APITOKEN }}"
         run: go test --race ./...
 
