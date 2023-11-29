@@ -157,5 +157,32 @@ All errors that result from calling the CloudFlare REST API allow reading
 the HTTP response that caused it.
 
 ```go
+ctx := context.Background()
+apitoken := os.Getenv("TEST_CF_APITOKEN")
+testZoneID := os.Getenv("TEST_CF_ZONE_ID")
 
+creds, err := cfdns.APIToken(apitoken)
+if err != nil {
+	panic(err)
+}
+
+client := cfdns.NewClient(creds)
+
+_, err = client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
+	ZoneID:  testZoneID,
+	Name:    "invalid name",
+	Type:    "A",
+	Content: "github.com",
+	Comment: "Created by cfdns example",
+	TTL:     30 * time.Minute,
+})
+
+httpErr := cfdns.HTTPError{}
+if !errors.As(err, &httpErr) {
+	panic("not an HTTP error")
+}
+
+fmt.Printf("Got HTTP error %v", httpErr.Code) // can also access response headers and raw response body
+
+// Output: Got HTTP error 400
 ```
