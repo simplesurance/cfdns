@@ -1,3 +1,13 @@
+// Package cfdns is a non-official GO CloudFlare DNS API client for go.
+// It was created because the official API is not stable and breaks both
+// expectations multiple times a year. Some times the change is easily
+// detected, because causes compilation errors, in other cases the change is
+// not detected, like changes in the returned error. It is designed to
+// support only the DNS service.
+//
+// All requests sent by this library use configurable exponential back-off
+// for retrying failed requests and implements a soft-limiter to avoid
+// exhausting CloudFlare's client request quota.
 package cfdns
 
 import (
