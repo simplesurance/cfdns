@@ -18,7 +18,7 @@ import (
 // retrying the first time. On each retry the delay will be multiplied by
 // the provided factor, but will not be longer than maxDelay.
 //
-// attempts indicates how many times the function call be invoked. The value
+// attempts indicates how many times the function is invoked. The value
 // 1 means to call it only once, never retrying if it fails. The number 2
 // allows for 1 retry, and so on. A value of 0 or less will make it retry
 // forever. If f() keeps failing after the number of retries is reached it
