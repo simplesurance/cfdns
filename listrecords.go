@@ -18,6 +18,8 @@ func (c *Client) ListRecords(
 	req *ListRecordsRequest,
 ) *Iterator[ListRecordsResponseItem] {
 	page := 0
+	total := 0
+	read := 0
 
 	return &Iterator[ListRecordsResponseItem]{
 		fetchNext: func(
@@ -71,7 +73,9 @@ func (c *Client) ListRecords(
 				}
 			}
 
-			isLast := len(resp.body.Result) < itemsPerPage
+			total = resp.body.ResultInfo.TotalCount
+			read += len(resp.body.Result)
+			isLast := read >= total
 
 			return items, isLast, nil
 		},

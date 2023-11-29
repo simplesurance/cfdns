@@ -16,6 +16,8 @@ func (c *Client) ListZones(
 	_ *ListZonesRequest,
 ) *Iterator[ListZonesResponseItem] {
 	page := 0
+	total := 0
+	read := 0
 
 	return &Iterator[ListZonesResponseItem]{
 		fetchNext: func(
@@ -55,7 +57,9 @@ func (c *Client) ListZones(
 				}
 			}
 
-			isLast := len(resp.body.Result) < itemsPerPage
+			total = resp.body.ResultInfo.TotalCount
+			read += len(resp.body.Result)
+			isLast := read >= total
 
 			return items, isLast, nil
 		},
