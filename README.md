@@ -21,6 +21,8 @@ go get github.com/simplesurance/cfdns@latest
 ```
 ## How to Use
 
+### Listing Records
+
 ```go
 ctx := context.Background()
 apitoken := os.Getenv("CFTOKEN")
@@ -45,4 +47,42 @@ for {
 
 	fmt.Printf("Found zone %s\n", zone.Name)
 }
+```
+
+### Create and Delete a DNS Record
+
+```go
+ctx := context.Background()
+apitoken := os.Getenv("TEST_CF_APITOKEN")
+testZoneID := os.Getenv("TEST_CF_ZONE_ID")
+
+creds, err := cfdns.APIToken(apitoken)
+if err != nil {
+	panic(err)
+}
+
+client := cfdns.NewClient(creds)
+
+resp, err := client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
+	ZoneID:  testZoneID,
+	Name:    "example-record",
+	Type:    "CNAME",
+	Content: "github.com",
+	Proxied: false,
+	Comment: "Created by cfdns example",
+	TTL:     time.Duration(30 * time.Minute),
+})
+if err != nil {
+	panic(err)
+}
+
+fmt.Printf("Created DNS record %s", resp.Name)
+
+// cleanup
+_, _ = client.DeleteRecord(ctx, &cfdns.DeleteRecordRequest{
+	ZoneID:   testZoneID,
+	RecordID: resp.ID,
+})
+
+// Output: Created DNS record example-record.simplesurance.top
 ```
