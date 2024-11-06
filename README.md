@@ -184,5 +184,5 @@ for _, cfe := range cfErr.Errors {
 
 // Output:
 // Got HTTP error 400
-// - CF error 1004: DNS Validation Error
+// - CF error 9005: Content for A record must be a valid IPv4 address.
 ```
