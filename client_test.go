@@ -155,7 +155,7 @@ func TestConflict(t *testing.T) {
 		{
 			typ:           "A",
 			content:       "1.1.1.1",
-			wantErrorCode: 81057,
+			wantErrorCode: 81058,
 		},
 	}
 

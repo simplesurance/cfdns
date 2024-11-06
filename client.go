@@ -240,7 +240,7 @@ func handleErrorResponse(resp *http.Response, _ *log.Logger) error {
 	var cfcommon cfResponseCommon
 	err = json.Unmarshal(respBody, &cfcommon)
 	if err != nil {
-		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, unmarshalling the error body as json failed: %w; %w", err, httpErr)}
+		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, unmarshaling the error body as json failed: %w; %w", err, httpErr)}
 	}
 
 	ret := CloudFlareError{
