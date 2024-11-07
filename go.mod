@@ -2,8 +2,6 @@ module github.com/simplesurance/cfdns
 
 go 1.21
 
-toolchain go1.23.3
-
 require (
 	github.com/fatih/color v1.18.0
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
