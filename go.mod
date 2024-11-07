@@ -1,8 +1,8 @@
 module github.com/simplesurance/cfdns
 
-go 1.21
+go 1.23
 
-toolchain go1.21.4
+toolchain go1.23.3
 
 require (
 	github.com/fatih/color v1.18.0
