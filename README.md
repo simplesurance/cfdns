@@ -10,6 +10,12 @@ itself can find the problem, sometimes the expectation can't be detected
 automatically, while when the returned error is changed, leading to
 unexpected behavior in code that might be mission-critical.
 
+The original library also has an implementation that requires an unbounded
+amount of memory when listing records. This implementation is `O(1)` in
+memory for all operations.
+
+Exponential back-off is implemented and heavily tested.
+
 This library was designed to support only the DNS service.
 
 ## Project Status
