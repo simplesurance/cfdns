@@ -11,8 +11,9 @@ automatically, while when the returned error is changed, leading to
 unexpected behavior in code that might be mission-critical.
 
 This library is being used on a system that manages dozens of domains with
-thousands of records, and it show up to be reliable, and eliminating
-multiple issues that were present when the official library was being used.
+thousands of records, and makes hundreds of changes per day. It show up to
+be reliable, and eliminating multiple issues that were present when the
+official library was being used.
 
 The original library also has an implementation that requires an unbounded
 amount of memory when listing records. This implementation is `O(1)` in
