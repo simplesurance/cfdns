@@ -3,7 +3,7 @@
 
 ## About
 
-Non-Official GO CloudFlare DNS API client for go. It was created because
+Non-Official GO CloudFlare DNS API client. It was created because
 the official API is not stable and breaks its consumers multiple times
 a year. Some of the breaks are immediately apparent because the compiler
 itself can find the problem, sometimes the expectation can't be detected
