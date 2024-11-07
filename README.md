@@ -14,8 +14,8 @@ This library was designed to support only the DNS service.
 
 ## Project Status
 
-This project is in pre-release stage and backwards compatibility is not
-guaranteed.
+This version is stable, being used in production. It will provide backwards
+compatibility according to go module conventions.
 
 ## How to Get
 
