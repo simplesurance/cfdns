@@ -3,19 +3,30 @@
 
 ## About
 
-Non-Official GO CloudFlare DNS API client for go. It was created because
+Non-Official GO CloudFlare DNS API client. It was created because
 the official API is not stable and breaks its consumers multiple times
 a year. Some of the breaks are immediately apparent because the compiler
 itself can find the problem, sometimes the expectation can't be detected
 automatically, while when the returned error is changed, leading to
 unexpected behavior in code that might be mission-critical.
 
+This library is being used on a system that manages dozens of domains with
+thousands of records, and makes hundreds of changes per day. It show up to
+be reliable, and eliminating multiple issues that were present when the
+official library was being used.
+
+The original library also has an implementation that requires an unbounded
+amount of memory when listing records. This implementation is `O(1)` in
+memory for all operations.
+
+Exponential back-off is implemented and heavily tested.
+
 This library was designed to support only the DNS service.
 
 ## Project Status
 
-This project is in pre-release stage and backwards compatibility is not
-guaranteed.
+This version is stable, being used in production. It will provide backwards
+compatibility according to go module conventions.
 
 ## How to Get
 
