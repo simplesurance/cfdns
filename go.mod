@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/fatih/color v1.18.0
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
-	golang.org/x/time v0.7.0
+	golang.org/x/time v0.8.0
 )
 
 require (
