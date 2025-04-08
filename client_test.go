@@ -160,7 +160,7 @@ func TestConflict(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
+		tc := tc //nolint:copyloopvar
 		t.Run(tc.typ, func(t *testing.T) {
 			t.Parallel()
 			comment := "integration test"
