@@ -1,32 +1,30 @@
 ---
+version: "2"
 linters:
-  disable-all: false
-  enable:
-    - bodyclose
+  default: all
+  disable:
+    - wsl
+    - varnamelen
+    - canonicalheader
+    - cyclop
+    - depguard
+    - err113
     - errcheck
-    - errorlint
-    - copyloopvar
-    - goimports
-    - goprintffuncname
-    - gosimple
-    - govet
-    - ineffassign
-    - misspell
-    - noctx
-    - nolintlint
-    - nosprintfhostport
-    - prealloc
+    - exhaustive
+    - exhaustruct
+    - funlen
+    - gochecknoglobals
+    - goconst
+    - gosec
+    - inamedparam
+    - lll
+    - mnd
+    - nlreturn
+    - nonamedreturns
+    - paralleltest
     - revive
     - staticcheck
-    - usetesting
-    - typecheck
-    - unconvert
-    - unused
-    - usestdlibvars
-
-linters-settings:
-  goimports:
-    local-prefixes: github.com/simplesurance/cfdns
-
-issues:
-  exclude-use-default: true
+    - tagliatelle
+    - thelper
+    - wrapcheck
+    - ireturn
