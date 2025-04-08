@@ -5,7 +5,7 @@ linters:
     - bodyclose
     - errcheck
     - errorlint
-    - exportloopref
+    - copyloopvar
     - goimports
     - goprintffuncname
     - gosimple
@@ -18,7 +18,7 @@ linters:
     - prealloc
     - revive
     - staticcheck
-    - tenv
+    - usetesting
     - typecheck
     - unconvert
     - unused
