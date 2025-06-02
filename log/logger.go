@@ -62,13 +62,6 @@ func (l *Logger) D(lf func(lg DebugFn)) {
 
 type DebugFn func(msg string, opt ...Option)
 
-func (l *Logger) d(msg string, opt ...Option) {
-	if helper := l.driver.PreLog(); helper != nil {
-		helper()
-	}
-	l.log(msg, Debug, opt...)
-}
-
 func (l *Logger) I(msg string, opt ...Option) {
 	if helper := l.driver.PreLog(); helper != nil {
 		helper()
@@ -88,6 +81,13 @@ func (l *Logger) E(msg string, opt ...Option) {
 		helper()
 	}
 	l.log(msg, Error, opt...)
+}
+
+func (l *Logger) d(msg string, opt ...Option) {
+	if helper := l.driver.PreLog(); helper != nil {
+		helper()
+	}
+	l.log(msg, Debug, opt...)
 }
 
 func (l *Logger) log(msg string, sev Severity, opt ...Option) {

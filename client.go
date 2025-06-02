@@ -36,6 +36,11 @@ var errResponseTooLarge = retry.PermanentError{
 	Cause: errors.New("Response from CloudFlare is too large"),
 }
 
+type Client struct {
+	*settings
+	creds Credentials
+}
+
 func NewClient(creds Credentials, options ...Option) *Client {
 	ret := Client{
 		settings: applyOptions(options...),
@@ -43,11 +48,6 @@ func NewClient(creds Credentials, options ...Option) *Client {
 	}
 
 	return &ret
-}
-
-type Client struct {
-	*settings
-	creds Credentials
 }
 
 // sendRequestRetry tries sending the request until it succeeds, fail to
