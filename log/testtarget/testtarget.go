@@ -8,12 +8,12 @@ package testtarget
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 	"testing"
 
 	"github.com/fatih/color"
-	"golang.org/x/exp/maps"
 
 	"github.com/simplesurance/cfdns/log"
 )
@@ -38,7 +38,7 @@ func (t testDriver) Send(l *log.Entry) {
 
 	fmt.Fprintf(msg, "[%s] %s", l.Severity, l.Message)
 
-	keys := maps.Keys(l.Tags)
+	keys := slices.Collect(maps.Keys(l.Tags))
 	slices.Sort(keys)
 	for _, key := range keys {
 		fmt.Fprintf(msg, "\n- %s: %v", key, format(l.Tags[key]))

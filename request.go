@@ -2,11 +2,11 @@ package cfdns
 
 import (
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/maps"
 )
 
 type request struct {
@@ -33,7 +33,8 @@ func (e HTTPError) Error() string {
 	msg := &strings.Builder{}
 
 	fmt.Fprintf(msg, "HTTP %d\n", e.Code)
-	headers := maps.Keys(e.Headers)
+	headers := slices.Collect(maps.Keys(e.Headers))
+	slices.Sort(headers)
 	for _, k := range headers {
 		fmt.Fprintf(msg, "%s: %s\n", k, e.Headers.Get(k))
 	}
