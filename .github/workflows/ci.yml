@@ -32,7 +32,7 @@ jobs:
     strategy:
       matrix:
         go: ["1.21", "stable"]
-        lint: ["v2.0.2"]
+        lint: ["v2.1.6"]
     name: lint
     runs-on: ubuntu-latest
     steps:
