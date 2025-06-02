@@ -8,12 +8,12 @@ package texttarget
 import (
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 	"sync"
 	"time"
 
 	"github.com/fatih/color"
-	"golang.org/x/exp/maps"
 
 	"github.com/simplesurance/cfdns/log"
 )
@@ -66,7 +66,7 @@ func (l *logger) Send(entry *log.Entry) {
 
 	fmt.Fprint(w, msg)
 
-	keys := maps.Keys(entry.Tags)
+	keys := slices.Collect(maps.Keys(entry.Tags))
 	slices.Sort(keys)
 
 	for _, key := range keys {
