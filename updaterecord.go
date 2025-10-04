@@ -44,7 +44,6 @@ func (c *Client) UpdateRecord(
 				TTL:     ttl,
 			},
 		})
-
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +52,7 @@ func (c *Client) UpdateRecord(
 		log(fmt.Sprintf("Record %s (%s %s %s) updated",
 			req.RecordID, req.Name, req.Type, req.Content))
 	})
+
 	return &UpdateRecordResponse{
 		ModifiedOn: resp.body.Result.ModifiedOn,
 	}, err
@@ -86,6 +86,7 @@ type updateRecordAPIRequest struct {
 
 type updateRecordAPIResponse struct {
 	cfResponseCommon
+
 	Result struct {
 		ModifiedOn time.Time `json:"modified_on"`
 	} `json:"result"`

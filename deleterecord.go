@@ -28,7 +28,6 @@ func (c *Client) DeleteRecord(
 			queryParams: url.Values{},
 			body:        nil,
 		})
-
 	if err != nil {
 		return nil, err
 	}
@@ -36,6 +35,7 @@ func (c *Client) DeleteRecord(
 	c.logger.D(func(log log.DebugFn) {
 		log(fmt.Sprintf("Record %s deleted", req.RecordID))
 	})
+
 	return &DeleteRecordResponse{}, err
 }
 

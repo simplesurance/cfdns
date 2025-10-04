@@ -41,7 +41,6 @@ func (c *Client) CreateRecord(
 				TTL:     ttl,
 			},
 		})
-
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +49,7 @@ func (c *Client) CreateRecord(
 		log(fmt.Sprintf("Record %s %s %s created with ID=%s",
 			req.Name, req.Type, req.Content, resp.body.Result.ID))
 	})
+
 	return &CreateRecordResponse{
 		ID:   resp.body.Result.ID,
 		Name: resp.body.Result.Name,
@@ -84,6 +84,7 @@ type createRecordAPIRequest struct {
 
 type createRecordAPIResponse struct {
 	cfResponseCommon
+
 	Result struct {
 		ID   string `json:"id"`
 		Name string `json:"name"`

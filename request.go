@@ -35,9 +35,11 @@ func (e HTTPError) Error() string {
 	fmt.Fprintf(msg, "HTTP %d\n", e.Code)
 	headers := slices.Collect(maps.Keys(e.Headers))
 	slices.Sort(headers)
+
 	for _, k := range headers {
 		fmt.Fprintf(msg, "%s: %s\n", k, e.Headers.Get(k))
 	}
+
 	fmt.Fprintln(msg)
 	fmt.Fprintf(msg, "%s", e.RawBody)
 
@@ -57,6 +59,7 @@ var _ error = HTTPError{}
 
 type CloudFlareError struct {
 	cfResponseCommon
+
 	HTTPError HTTPError
 }
 

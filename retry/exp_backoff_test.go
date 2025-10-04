@@ -15,7 +15,7 @@ import (
 )
 
 func TestRetry(t *testing.T) {
-	ctx := t.Context()
+	ctx := context.Background()
 	someErr := errors.New("some error")
 
 	cases := []*struct {
@@ -74,17 +74,20 @@ func TestRetry(t *testing.T) {
 					if tc.permErrorAt != 0 && fCallCount == tc.permErrorAt {
 						t.Logf("test function returning permanent error (c=%d l=%d)",
 							fCallCount, tc.permErrorAt)
+
 						return retry.PermanentError{Cause: someErr}
 					}
 
 					if tc.tempErrorCount != 0 && fCallCount <= tc.tempErrorCount {
 						t.Logf("test function returning temporary error (c=%d l=%d)",
 							fCallCount, tc.tempErrorCount)
+
 						return someErr
 					}
 
 					t.Logf("test function returning nil (c=%d pl=%d tl=%d)",
 						fCallCount, tc.permErrorAt, tc.tempErrorCount)
+
 					return nil
 				})
 			if tc.wantError {
@@ -92,6 +95,7 @@ func TestRetry(t *testing.T) {
 			} else {
 				assertNoError(t, err)
 			}
+
 			assertEquals(t, tc.wantFunctionCalls, fCallCount)
 		})
 	}
@@ -101,7 +105,7 @@ func TestContextCancel(t *testing.T) {
 	logger := log.New(testtarget.ForTest(t, true),
 		log.WithDebugEnabledFn(func() bool { return true }))
 
-	ctx, done := context.WithTimeout(t.Context(), 100*time.Millisecond)
+	ctx, done := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer done()
 
 	err := retry.ExpBackoff(ctx, logger, time.Hour, time.Hour, 2, 100, func() error {

@@ -38,6 +38,7 @@ var errResponseTooLarge = retry.PermanentError{
 
 type Client struct {
 	*settings
+
 	creds Credentials
 }
 
@@ -66,10 +67,13 @@ func sendRequestRetry[TRESP commonResponseSetter](
 	error,
 ) {
 	var resp *response[TRESP]
+
 	reterr := retry.ExpBackoff(ctx, logger, retryFirstDelay, retryMaxDelay,
 		retryFactor, retryMaxAttempts, func() error {
 			var err error
+
 			resp, err = sendRequest[TRESP](ctx, client, logger, req)
+
 			return err
 		})
 
@@ -105,8 +109,10 @@ func sendRequest[TRESP commonResponseSetter](
 
 	// request timeout
 	reqCtx := ctx
+
 	if client.requestTimeout > 0 {
 		var reqCtxCancel func()
+
 		reqCtx, reqCtxCancel = context.WithTimeout(reqCtx, client.requestTimeout)
 		defer reqCtxCancel()
 	}
@@ -145,6 +151,7 @@ func sendRequest[TRESP commonResponseSetter](
 	if resp.StatusCode >= 400 {
 		err = handleErrorResponse(resp, logger)
 		logFullRequestResponse(logger, reqNoAuth, reqBody, resp, rawResponseFromErr(err))
+
 		return nil, err
 	}
 
@@ -171,6 +178,7 @@ func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, 
 	ret.headers = httpResp.Header
 
 	var err error
+
 	ret.rawBody, err = readResponseBody(httpResp.Body)
 	if err != nil {
 		// error response already specifies is can retry or not
@@ -183,6 +191,7 @@ func handleSuccessResponse[TRESP commonResponseSetter](httpResp *http.Response, 
 
 	if len(ret.rawBody) == maxResponseLength {
 		logger.W(fmt.Sprintf("Response from CloudFlare rejected because is bigger than %d", maxResponseLength))
+
 		return nil, retry.PermanentError{
 			Cause: errors.Join(err, HTTPError{
 				Code:    httpResp.StatusCode,
@@ -238,6 +247,7 @@ func handleErrorResponse(resp *http.Response, _ *log.Logger) error {
 	}
 
 	var cfcommon cfResponseCommon
+
 	err = json.Unmarshal(respBody, &cfcommon)
 	if err != nil {
 		return retry.PermanentError{Cause: fmt.Errorf("CloudFlare returned an error, unmarshaling the error body as json failed: %w; %w", err, httpErr)}
@@ -283,6 +293,7 @@ func logFullRequestResponse(
 
 func requestURL(treq *request) string {
 	urlstring := baseURL + "/" + treq.path
+
 	theurl, err := url.Parse(urlstring)
 	if err != nil {
 		// this only happens in case of coding error on cfapi

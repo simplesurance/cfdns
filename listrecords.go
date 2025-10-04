@@ -52,7 +52,6 @@ func (c *Client) ListRecords(
 					queryParams: queryParams,
 					body:        nil,
 				})
-
 			if err != nil {
 				return nil, false, err
 			}
@@ -100,6 +99,7 @@ type ListRecordsResponseItem struct {
 
 type listRecordsAPIResponse struct {
 	cfResponseCommon
+
 	Result []listRecordsAPIResponseItem `json:"result"`
 }
 

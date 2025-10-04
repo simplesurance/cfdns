@@ -23,6 +23,7 @@ type fetchFn[T any] func(ctx context.Context) (batch []*T, last bool, _ error)
 func (it *Iterator[T]) Next(ctx context.Context) (retElm *T, err error) {
 	if len(it.elements) == 0 && !it.isLast {
 		var elements []*T
+
 		elements, it.isLast, err = it.fetchNext(ctx)
 		if err != nil {
 			return nil, err
@@ -37,6 +38,7 @@ func (it *Iterator[T]) Next(ctx context.Context) (retElm *T, err error) {
 
 	retElm = it.elements[0]
 	it.elements = it.elements[1:]
+
 	return retElm, nil
 }
 
@@ -44,6 +46,7 @@ func (it *Iterator[T]) Next(ctx context.Context) (retElm *T, err error) {
 // and return them as an array.
 func ReadAll[T any](ctx context.Context, it *Iterator[T]) ([]*T, error) {
 	ret := []*T{}
+
 	for {
 		item, err := it.Next(ctx)
 		if err != nil {
