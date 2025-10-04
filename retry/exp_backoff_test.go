@@ -15,7 +15,7 @@ import (
 )
 
 func TestRetry(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	someErr := errors.New("some error")
 
 	cases := []*struct {
@@ -101,7 +101,7 @@ func TestContextCancel(t *testing.T) {
 	logger := log.New(testtarget.ForTest(t, true),
 		log.WithDebugEnabledFn(func() bool { return true }))
 
-	ctx, done := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	ctx, done := context.WithTimeout(t.Context(), 100*time.Millisecond)
 	defer done()
 
 	err := retry.ExpBackoff(ctx, logger, time.Hour, time.Hour, 2, 100, func() error {

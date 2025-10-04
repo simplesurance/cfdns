@@ -28,7 +28,7 @@ const (
 
 func TestCreateCNAME(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 	client, testZoneID := getClient(ctx, t)
 	cname := "CNAME"
 	comment := "integration test"
@@ -79,7 +79,7 @@ func TestUpdate(t *testing.T) {
 	changedComment := "integration test"
 	cname := "cname"
 
-	ctx := context.Background()
+	ctx := t.Context()
 	client, testZoneID := getClient(ctx, t)
 
 	// create a DNS record
@@ -139,7 +139,7 @@ func TestUpdate(t *testing.T) {
 // Test a few cases of error to make sure error handling works.
 func TestConflict(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 	client, testZoneID := getClient(ctx, t)
 
 	cases := []*struct {
