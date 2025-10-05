@@ -44,6 +44,7 @@ type logger struct {
 
 func (l *logger) Send(entry *log.Entry) {
 	w := l.outw
+
 	mux := l.outMux
 	if entry.Severity == log.Error {
 		w = l.errw
@@ -77,6 +78,7 @@ func (l *logger) Send(entry *log.Entry) {
 
 	mux.Lock()
 	defer mux.Unlock()
+
 	fmt.Fprintln(w)
 }
 

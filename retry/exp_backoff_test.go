@@ -74,17 +74,20 @@ func TestRetry(t *testing.T) {
 					if tc.permErrorAt != 0 && fCallCount == tc.permErrorAt {
 						t.Logf("test function returning permanent error (c=%d l=%d)",
 							fCallCount, tc.permErrorAt)
+
 						return retry.PermanentError{Cause: someErr}
 					}
 
 					if tc.tempErrorCount != 0 && fCallCount <= tc.tempErrorCount {
 						t.Logf("test function returning temporary error (c=%d l=%d)",
 							fCallCount, tc.tempErrorCount)
+
 						return someErr
 					}
 
 					t.Logf("test function returning nil (c=%d pl=%d tl=%d)",
 						fCallCount, tc.permErrorAt, tc.tempErrorCount)
+
 					return nil
 				})
 			if tc.wantError {
@@ -92,6 +95,7 @@ func TestRetry(t *testing.T) {
 			} else {
 				assertNoError(t, err)
 			}
+
 			assertEquals(t, tc.wantFunctionCalls, fCallCount)
 		})
 	}

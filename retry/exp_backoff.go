@@ -80,18 +80,22 @@ func ExpBackoff(
 		select {
 		case <-ctx.Done():
 			err := ctx.Err()
+
 			logger.D(func(lg log.DebugFn) {
 				lg("context was canceled",
 					log.WithInt("attempt", attempt),
 					log.WithDuration("total_delay", time.Since(start)),
 					log.WithError(err))
 			})
+
 			return err
 		case <-time.After(time.Duration(delay * float64(time.Second))):
 			delay *= factor
+
 			logger.D(func(lg log.DebugFn) {
 				lg(fmt.Sprintf("next delay: %f seconds", delay))
 			})
+
 			if delay > maxDelay.Seconds() {
 				delay = maxDelay.Seconds()
 			}

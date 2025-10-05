@@ -9,7 +9,7 @@ import (
 	"github.com/simplesurance/cfdns/log"
 )
 
-// Listzones lists zones on CloudFlare.
+// ListZones lists zones on CloudFlare.
 //
 // API Reference: https://developers.cloudflare.com/api/operations/zones-get
 func (c *Client) ListZones(
@@ -44,7 +44,6 @@ func (c *Client) ListZones(
 					queryParams: queryParams,
 					body:        nil,
 				})
-
 			if err != nil {
 				return nil, false, err
 			}
@@ -75,6 +74,7 @@ type ListZonesResponseItem struct {
 
 type listZoneAPIResponse struct {
 	cfResponseCommon
+
 	Result []listZoneAPIResponseItem `json:"result"`
 }
 

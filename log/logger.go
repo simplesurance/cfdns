@@ -66,6 +66,7 @@ func (l *Logger) I(msg string, opt ...Option) {
 	if helper := l.driver.PreLog(); helper != nil {
 		helper()
 	}
+
 	l.log(msg, Info, opt...)
 }
 
@@ -73,6 +74,7 @@ func (l *Logger) W(msg string, opt ...Option) {
 	if helper := l.driver.PreLog(); helper != nil {
 		helper()
 	}
+
 	l.log(msg, Warn, opt...)
 }
 
@@ -80,6 +82,7 @@ func (l *Logger) E(msg string, opt ...Option) {
 	if helper := l.driver.PreLog(); helper != nil {
 		helper()
 	}
+
 	l.log(msg, Error, opt...)
 }
 
@@ -87,6 +90,7 @@ func (l *Logger) d(msg string, opt ...Option) {
 	if helper := l.driver.PreLog(); helper != nil {
 		helper()
 	}
+
 	l.log(msg, Debug, opt...)
 }
 

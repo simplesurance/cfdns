@@ -28,6 +28,7 @@ const (
 
 func TestCreateCNAME(t *testing.T) {
 	t.Parallel()
+
 	ctx := context.Background()
 	client, testZoneID := getClient(ctx, t)
 	cname := "CNAME"
@@ -35,6 +36,7 @@ func TestCreateCNAME(t *testing.T) {
 
 	// create a DNS record
 	recName := testRecordName(t)
+
 	resp, err := client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
 		ZoneID:  testZoneID,
 		Name:    recName,
@@ -52,6 +54,7 @@ func TestCreateCNAME(t *testing.T) {
 
 	// assert that it is present
 	var recs []*cfdns.ListRecordsResponseItem
+
 	recs, err = cfdns.ReadAll(ctx, client.ListRecords(&cfdns.ListRecordsRequest{
 		ZoneID: testZoneID,
 		Name:   resp.Name,
@@ -75,8 +78,9 @@ func TestCreateCNAME(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	t.Parallel()
+
 	originalComment := "integration test"
-	changedComment := "integration test"
+	changedComment := "integration test - changed"
 	cname := "cname"
 
 	ctx := context.Background()
@@ -84,6 +88,7 @@ func TestUpdate(t *testing.T) {
 
 	// create a DNS record
 	recName := testRecordName(t)
+
 	resp, err := client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
 		ZoneID:  testZoneID,
 		Name:    recName,
@@ -139,6 +144,7 @@ func TestUpdate(t *testing.T) {
 // Test a few cases of error to make sure error handling works.
 func TestConflict(t *testing.T) {
 	t.Parallel()
+
 	ctx := context.Background()
 	client, testZoneID := getClient(ctx, t)
 
@@ -160,13 +166,14 @@ func TestConflict(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc //nolint:copyloopvar
 		t.Run(tc.typ, func(t *testing.T) {
 			t.Parallel()
+
 			comment := "integration test"
 
 			// create a DNS record
 			recName := testRecordName(t)
+
 			resp, err := client.CreateRecord(ctx, &cfdns.CreateRecordRequest{
 				ZoneID:  testZoneID,
 				Name:    recName,
@@ -238,6 +245,7 @@ func getClient(ctx context.Context, t *testing.T) (_ *cfdns.Client, testZoneID s
 	}
 
 	t.Fatalf("Zone %s not found on CloudFlare", testzone)
+
 	return nil, ""
 }
 
@@ -250,7 +258,9 @@ func testRecordName(t *testing.T) string {
 	testzone := os.Getenv(envTestZone)
 
 	rnd := make([]byte, 4)
-	if _, err := rand.Read(rnd); err != nil {
+
+	_, err := rand.Read(rnd)
+	if err != nil {
 		t.Fatalf("Error reading random number: %v", err)
 	}
 
@@ -292,6 +302,7 @@ func cleanup(
 			}
 
 			t.Logf("Error listing records when looking for old test data: %v", err)
+
 			return
 		}
 
@@ -304,6 +315,7 @@ func cleanup(
 		if err != nil {
 			t.Errorf("Record %s (%s %s %s) has a time part %q that is invalid",
 				record.ID, record.Name, record.Type, record.Content, matches[1])
+
 			continue
 		}
 
@@ -326,6 +338,7 @@ func cleanup(
 
 func requireNotNil(t *testing.T, v any) {
 	t.Helper()
+
 	if v == nil {
 		t.Fatalf("Unexpected nil value")
 	}

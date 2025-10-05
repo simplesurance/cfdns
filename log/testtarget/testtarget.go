@@ -40,6 +40,7 @@ func (t testDriver) Send(l *log.Entry) {
 
 	keys := slices.Collect(maps.Keys(l.Tags))
 	slices.Sort(keys)
+
 	for _, key := range keys {
 		fmt.Fprintf(msg, "\n- %s: %v", key, format(l.Tags[key]))
 	}
