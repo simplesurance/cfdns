@@ -80,7 +80,7 @@ func TestUpdate(t *testing.T) {
 	t.Parallel()
 
 	originalComment := "integration test"
-	changedComment := "integration test"
+	changedComment := "integration test - changed"
 	cname := "cname"
 
 	ctx := context.Background()
