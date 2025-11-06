@@ -12,7 +12,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go: ["1.23", "stable"]
+        go: ["1.24", "stable"]
     name: test
     runs-on: ubuntu-latest
     steps:
@@ -31,7 +31,7 @@ jobs:
   golangci:
     strategy:
       matrix:
-        go: ["1.23", "stable"]
+        go: ["1.24", "stable"]
         lint: ["v2.5.0"]
     name: lint
     runs-on: ubuntu-latest
