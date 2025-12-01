@@ -326,5 +326,5 @@ func rawResponseFromErr(err error) []byte {
 	}
 
 	// if the error is not an HTTPError return instead the error's details
-	return []byte(fmt.Sprintf("%v", err))
+	return fmt.Appendf(nil, "%v", err)
 }

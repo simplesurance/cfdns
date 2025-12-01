@@ -1,5 +1,4 @@
 //go:build integrationtest || !unittest
-// +build integrationtest !unittest
 
 package retry_test
 
