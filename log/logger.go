@@ -24,7 +24,7 @@ type Logger struct {
 }
 
 func (l *Logger) SubLogger(opts ...Option) *Logger {
-	options := []Option{}
+	options := make([]Option, 0, len(l.options)+len(opts))
 	options = append(options, l.options...)
 	options = append(options, opts...)
 

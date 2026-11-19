@@ -320,8 +320,7 @@ func readResponseBody(body io.Reader) ([]byte, error) {
 }
 
 func rawResponseFromErr(err error) []byte {
-	var httpErr HTTPError
-	if errors.As(err, &httpErr) {
+	if httpErr, ok := errors.AsType[HTTPError](err); ok {
 		return httpErr.RawBody
 	}
 
