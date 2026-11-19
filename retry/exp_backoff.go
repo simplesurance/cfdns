@@ -54,16 +54,14 @@ func ExpBackoff(
 				log.WithDuration("total_delay", time.Since(start)),
 				log.WithError(err))
 
-			var permError PermanentError
-			if errors.As(err, &permError) {
+			if permError, ok := errors.AsType[PermanentError](err); ok {
 				return permError.Cause
 			}
 
 			return err
 		}
 
-		var permError PermanentError
-		if errors.As(err, &permError) {
+		if permError, ok := errors.AsType[PermanentError](err); ok {
 			logger.W("f() returned a permanent error; giving up.",
 				log.WithInt("attempt", attempt),
 				log.WithDuration("total_delay", time.Since(start)),
